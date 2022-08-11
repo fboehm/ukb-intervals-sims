@@ -1,0 +1,31 @@
+rule make_sym_links:
+    input:
+        original_bed = '/net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr22.bed',
+        original_bim = '/net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr22.bim'
+    output: 
+        sym_bed = 'dat/chr22.bed',
+        sym_bim = 'dat/chr22.bim'
+    shell: 
+        'ln -s input.original_bed output.sym_bed; ln -s input.original_bim output.sym_bim'
+
+
+rule simulate_snp_effects:
+    input: 
+        'dat/chr22.bim'
+    output:
+        'dat/snp_effects_Chr22_hsq{config[hsq]}_pcausal{config[pcausal]}.txt'
+    run:
+        'Rscript -e Rscript/simulate_snp_effects.R {config[hsq]} {config[pcausal]}'
+
+rule simulate_traits:
+    input:
+        'dat/chr22.bed', 
+        'dat/chr22.bim', 
+        'dat/chr22.fam',
+        effects = 'dat/snp_effects_Chr22_hsq{config[hsq]}_pcausal{config[pcausal]}.txt'
+    output: 
+        'dat/sim_traits/sims_Chr22_hsq{config[hsq]}_pcausal{config[pcausal]}.phen'
+    shell: 
+        'gcta64 --bfile ../dat/simulations-ding/chr22 --simu-qt --simu-causal-loci  {input.effects} --simu-hsq {config[hsq]} --simu-rep 10 --out {output}'
+  
+
