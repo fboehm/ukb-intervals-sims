@@ -12,8 +12,8 @@ bim_tib <- vroom::vroom(bim_file, col_names = FALSE) %>%
 # set params
 m <- nrow(bim_tib)
 p_causal <- args[2]
-set.seed(2022-05-23)
 hsq <- args[1]
+set.seed(2022-05-23)
 
 bim_tib2 <- bim_tib %>%
   dplyr::mutate(causal = rbinom(n = m, size = 1, prob = p_causal)) %>%

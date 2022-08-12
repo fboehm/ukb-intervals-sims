@@ -8,24 +8,57 @@ rule make_sym_links:
     shell: 
         'ln -s input.original_bed output.sym_bed; ln -s input.original_bim output.sym_bim'
 
+rule make_dummy_fam:
+    input:
+        '/net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr22.fam'
+    output: 
+        'dat/chr22.fam'
+    shell: 
+        'Rscript -e Rscript/make_dummy_fam.R'
+
+rule partition_subjects:
+    input: 'dat/chr22.fam'
+    output: 
+        'dat/validation-ids.txt',
+        'dat/verification-ids.txt',
+        'dat/test-ids-fold1.txt,
+        'dat/test-ids-fold2.txt,
+        'dat/test-ids-fold3.txt,
+        'dat/test-ids-fold4.txt,
+        'dat/test-ids-fold5.txt,
+        'dat/training-ids-fold1.txt,
+        'dat/training-ids-fold2.txt,
+        'dat/training-ids-fold3.txt,
+        'dat/training-ids-fold4.txt,
+        'dat/training-ids-fold5.txt
+    shell: 
+        'Rscript -e Rscript/partition_subjects.R'
+
+
 
 rule simulate_snp_effects:
     input: 
         'dat/chr22.bim'
     output:
-        'dat/snp_effects_Chr22_hsq{config[hsq]}_pcausal{config[pcausal]}.txt'
-    run:
-        'Rscript -e Rscript/simulate_snp_effects.R {config[hsq]} {config[pcausal]}'
+        'dat/snp_effects_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt'
+    shell:
+        'Rscript -e Rscript/simulate_snp_effects.R {config["hsq"]} {config["pcausal"]}'
 
 rule simulate_traits:
     input:
         'dat/chr22.bed', 
         'dat/chr22.bim', 
         'dat/chr22.fam',
-        effects = 'dat/snp_effects_Chr22_hsq{config[hsq]}_pcausal{config[pcausal]}.txt'
+        effects = 'dat/snp_effects_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt'
     output: 
-        'dat/sim_traits/sims_Chr22_hsq{config[hsq]}_pcausal{config[pcausal]}.phen'
+        'dat/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.phen'
     shell: 
-        'gcta64 --bfile ../dat/simulations-ding/chr22 --simu-qt --simu-causal-loci  {input.effects} --simu-hsq {config[hsq]} --simu-rep 10 --out {output}'
+        'gcta64 --bfile ../dat/simulations-ding/chr22 --simu-qt --simu-causal-loci  {input.effects} --simu-hsq {config["hsq"]} --simu-rep 10 --out {output}'
   
-
+rule quantile_normalize_traits:
+    input:
+        'dat/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.phen'
+    output: 
+        'dat/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}-NAs.fam',
+        'dat/sim_traits/fam_all_subjects/qn_traits_all_subjects_hsq{config["hsq"]}_pcausal{config["pcausal"]}.fam'
+        
