@@ -21,16 +21,16 @@ rule partition_subjects:
     output: 
         'dat/validation-ids.txt',
         'dat/verification-ids.txt',
-        'dat/test-ids-fold1.txt,
-        'dat/test-ids-fold2.txt,
-        'dat/test-ids-fold3.txt,
-        'dat/test-ids-fold4.txt,
-        'dat/test-ids-fold5.txt,
-        'dat/training-ids-fold1.txt,
-        'dat/training-ids-fold2.txt,
-        'dat/training-ids-fold3.txt,
-        'dat/training-ids-fold4.txt,
-        'dat/training-ids-fold5.txt
+        'dat/test-ids-fold1.txt',
+        'dat/test-ids-fold2.txt',
+        'dat/test-ids-fold3.txt',
+        'dat/test-ids-fold4.txt',
+        'dat/test-ids-fold5.txt',
+        'dat/training-ids-fold1.txt',
+        'dat/training-ids-fold2.txt',
+        'dat/training-ids-fold3.txt',
+        'dat/training-ids-fold4.txt',
+        'dat/training-ids-fold5.txt'
     shell: 
         'Rscript -e Rscript/partition_subjects.R'
 
