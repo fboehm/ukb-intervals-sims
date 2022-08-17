@@ -100,54 +100,6 @@ rule sym_links_plink_files_for_gemma:
       done
       """
 
-rule gemma:
-    log: "logs/gemma.log"
-    input: 
-      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.bed"
-      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.bim"
-      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.fam"
-    output:
-      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/output/summary_ukb_pheno1_fold1_chr1.assoc.txt"
-    shell: 
-      """
-      let k=0
-      type=ukb
-      gemma=/net/mulan/home/yasheng/comparisonProject/program/gemma-0.98.1-linux-static
 
-      for p in `seq 1 5`; do
-        for fold in 1 2 3 4 5; do 
-          for chr in `seq 1 22`; do
-            let k=${k}+1
-            if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
-
-              bfile=~/research/ukb-intervals/dat/simulations-ding/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr${chr}
-              summ=summary_${type}_pheno${p}_fold${fold}_chr${chr}
-
-              let col=(${p}-1)\*5+${fold}
-
-              outpath=dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}
-              mkdir -p ${outpath}
-              cd ${outpath}
-              file=output/${summ}.assoc.txt
-              if [ ! -f "$file" ]; then # check if file doesn't exist
-                ${gemma} -bfile ${bfile} -notsnp -lm 1 -n ${col} -o ${summ}
-              fi
-            fi
-
-            done 
-          done
-        done
-"""
-
-
-rule ldsc: 
-    log: "logs/ldsc.log"
-    input:
-    output:
-    shell:
-    """
-    
-    """
-    
     
     
