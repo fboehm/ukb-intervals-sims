@@ -2,6 +2,13 @@ localrules: all, make_sym_links, make_dummy_fam, sym_links_plink_files_for_gemma
 
 configfile: '../config/config_hsq0.1_pcausal0.1.yaml'
 
+rule all:
+    input: 
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.bed"
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.bim"
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.fam"
+
+
 rule make_sym_links:
     log: 'logs/make_sym_links.log'
     input:
