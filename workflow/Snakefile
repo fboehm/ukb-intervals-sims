@@ -74,8 +74,7 @@ rule simulate_traits:
   
 rule quantile_normalize_traits:
     log: 'logs/quantile_normalize_traits.log'
-    input:
-        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.phen'
+    input: 'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.phen'
     output: 
         'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}-NAs.fam',
         'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/sim_traits/fam_all_subjects/qn_traits_all_subjects_hsq{config["hsq"]}_pcausal{config["pcausal"]}.fam'
