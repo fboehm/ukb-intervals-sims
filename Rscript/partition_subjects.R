@@ -13,13 +13,13 @@ val_ids %>%
   dplyr::rename(X1 = 1) %>%
   dplyr::arrange(X1) %>%
   dplyr::mutate(X2 = X1) %>%
-  vroom::vroom_write(file = "../dat/simulations-ding/validation-ids.txt", col_names = FALSE)
+  vroom::vroom_write(file = snakemake@output[[1]], col_names = FALSE)
 verif_ids %>%
   tibble::tibble(.name_repair = "universal") %>%
   dplyr::rename(X1 = 1) %>%
   dplyr::arrange(X1) %>%
   dplyr::mutate(X2 = X1) %>%
-  vroom::vroom_write(file = "../dat/simulations-ding/verification-ids.txt", col_names = FALSE)
+  vroom::vroom_write(file = snakemake@output[[2]], col_names = FALSE)
 test_and_training_ids <- setdiff(ids$X1, val_ids)
 # set up for 5-fold cv with the remaining 300,000 subjects
 set.seed(2022-06-10)
@@ -29,15 +29,17 @@ folds <- cut(seq(1,length(ids_shuffled)),breaks=5,labels=FALSE)
 for (i in 1:5){
   ids_tib <- tibble::tibble(ids_shuffled, folds) %>%
     dplyr::arrange(ids_shuffled)
+  # write test ids for the fold
   ids_tib %>%
     dplyr::filter(folds == i) %>%
     dplyr::mutate(X2 = ids_shuffled) %>%
     dplyr::select(- folds) %>%
-    vroom::vroom_write(file = paste0("../dat/simulations-ding/test-ids-fold", i, ".txt"), col_names = FALSE)
+    vroom::vroom_write(file = snakemake@output[[2 + i]], col_names = FALSE)
+  # write training ids for the fold
   ids_tib %>%
     dplyr::filter(folds != i) %>%
     dplyr::mutate(X2 = ids_shuffled) %>%
     dplyr::select(- folds) %>%
-    vroom::vroom_write(file = paste0("../dat/simulations-ding/training-ids-fold", i, ".txt"), col_names = FALSE)
+    vroom::vroom_write(file = snakemake@output[[7 + i]], col_names = FALSE)
   
 }

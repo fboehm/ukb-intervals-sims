@@ -6,6 +6,8 @@ false_to_na <- function(vec){
 }
 
 trait_file <- snakemake@input[[1]]
+output_with_nas <- snakemake@output[[1]]
+output_without_nas <- snakemake@output[[2]]
   
 trait_tib <- vroom::vroom(trait_file, col_names = FALSE) %>%
   dplyr::select(-13) # drop the last column which contains only NAs
@@ -32,13 +34,13 @@ for (fold in 1:5){
     dplyr::filter(X1 %in% verif_ids$X1)
   
   
-  training_qn <- preprocessCore::normalize.quantiles(as.matrix(trait_tib_training[, 3:12]))
+  training_qn <- preprocessCore::normalize.quantiles(as.matrix(trait_tib_training[, 3:7]))
   target_test <- preprocessCore::normalize.quantiles.determine.target(x = training_qn, target.length = nrow(trait_tib_test))
-  test_qn <- preprocessCore::normalize.quantiles.use.target(x = as.matrix(trait_tib_test[, 3:12]), target = target_test)
+  test_qn <- preprocessCore::normalize.quantiles.use.target(x = as.matrix(trait_tib_test[, 3:7]), target = target_test)
   target_validation <- preprocessCore::normalize.quantiles.determine.target(x = training_qn, target.length = nrow(trait_tib_validation))
-  validation_qn <- preprocessCore::normalize.quantiles.use.target(x = as.matrix(trait_tib_validation[, 3:12]), target = target_validation)
+  validation_qn <- preprocessCore::normalize.quantiles.use.target(x = as.matrix(trait_tib_validation[, 3:7]), target = target_validation)
   target_verification <- preprocessCore::normalize.quantiles.determine.target(x = training_qn, target.length = nrow(trait_tib_verification))
-  verification_qn <- preprocessCore::normalize.quantiles.use.target(x = as.matrix(trait_tib_verification[, 3:12]), target = target_verification)
+  verification_qn <- preprocessCore::normalize.quantiles.use.target(x = as.matrix(trait_tib_verification[, 3:7]), target = target_verification)
   
   ######
   training_qn_tib <- training_ids[[fold]] %>%
@@ -57,7 +59,7 @@ for (fold in 1:5){
     dplyr::arrange(X1) #%>%
   qn_tib <- qn_tib_pre %>%
     dplyr::left_join(ids, by = c("X1", "X2")) %>%
-    dplyr::select(X1, X2, X3, X4, X5, V1:V10)
+    dplyr::select(X1, X2, X3, X4, X5, V1:V5)
 } # end loop over folds
 
 
@@ -99,53 +101,31 @@ qn_tib2 <- qn_tib %>%
                 tr5_fold2 = V5 * tr_indic$fold2_na,
                 tr5_fold3 = V5 * tr_indic$fold3_na,
                 tr5_fold4 = V5 * tr_indic$fold4_na,
-                tr5_fold5 = V5 * tr_indic$fold5_na,
-                tr6_fold1 = V6 * tr_indic$fold1_na,
-                tr6_fold2 = V6 * tr_indic$fold2_na,
-                tr6_fold3 = V6 * tr_indic$fold3_na,
-                tr6_fold4 = V6 * tr_indic$fold4_na,
-                tr6_fold5 = V6 * tr_indic$fold5_na,
-                tr7_fold1 = V7 * tr_indic$fold1_na,
-                tr7_fold2 = V7 * tr_indic$fold2_na,
-                tr7_fold3 = V7 * tr_indic$fold3_na,
-                tr7_fold4 = V7 * tr_indic$fold4_na,
-                tr7_fold5 = V7 * tr_indic$fold5_na,
-                tr8_fold1 = V8 * tr_indic$fold1_na,
-                tr8_fold2 = V8 * tr_indic$fold2_na,
-                tr8_fold3 = V8 * tr_indic$fold3_na,
-                tr8_fold4 = V8 * tr_indic$fold4_na,
-                tr8_fold5 = V8 * tr_indic$fold5_na,
-                tr9_fold1 = V9 * tr_indic$fold1_na,
-                tr9_fold2 = V9 * tr_indic$fold2_na,
-                tr9_fold3 = V9 * tr_indic$fold3_na,
-                tr9_fold4 = V9 * tr_indic$fold4_na,
-                tr9_fold5 = V9 * tr_indic$fold5_na,
-                tr10_fold1 = V10 * tr_indic$fold1_na,
-                tr10_fold2 = V10 * tr_indic$fold2_na,
-                tr10_fold3 = V10 * tr_indic$fold3_na,
-                tr10_fold4 = V10 * tr_indic$fold4_na,
-                tr10_fold5 = V10 * tr_indic$fold5_na,
+                tr5_fold5 = V5 * tr_indic$fold5_na
   ) %>%
-  dplyr::select(-V1, - V2, - V3, -V4, -V5, -V6, -V7, -V8, -V9, -V10) 
+  dplyr::select(-V1, - V2, - V3, -V4, -V5) 
 
 #####
 qn_tib2 %>%
-  vroom::vroom_write(file = paste0("../dat/sim_traits/sims_Chr22_hsq", hsq, "_pcausal", p_causal, "-NAs.fam"), col_names = FALSE)
-# write qn traits for all subjects in a single fam fil
+  vroom::vroom_write(file = output_with_nas, col_names = FALSE)
+  #vroom::vroom_write(file = paste0("../dat/sim_traits/sims_Chr22_hsq", hsq, "_pcausal", p_causal, "-NAs.fam"), col_names = FALSE)
+# write qn traits for all subjects in a single fam file
 qn_tib %>%
-  vroom::vroom_write(here::here("dat", 
-                                "sim_traits", 
-                                "fam_all_subjects", 
-                                paste0("qn_traits_all_subjects_hsq", hsq, "_pcausal", p_causal, ".fam")
-  ), 
-  col_names = FALSE)
+  vroom::vroom_write(file = output_without_nas, col_names = FALSE)
+  #vroom::vroom_write(here::here("dat", 
+  #                              "sim_traits", 
+  #                              "fam_all_subjects", 
+  #                              paste0("qn_traits_all_subjects_hsq", hsq, "_pcausal", p_causal, ".fam")
+  #), 
+  #col_names = FALSE)
 
 # make the pheno files for verification set
 qt_verif <- qn_tib %>%
   dplyr::arrange(X1) %>%
   dplyr::filter(X1 %in% verif_ids$X1)
-for (col_num in 6:15){
+for (col_num in 6:10){
+  outfile <- snakemake@output[[col_num - 3]]
   qt_verif %>%
     dplyr::select(dplyr::all_of(col_num)) %>%
-    vroom::vroom_write(here::here("dat", "verification", paste0("pheno", col_num - 5, ".txt")), col_names = FALSE)
+    vroom::vroom_write(file = outfile, col_names = FALSE)
 }

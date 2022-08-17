@@ -1,9 +1,10 @@
 #!/usr/bin/env Rscript
-args = commandArgs(trailingOnly=TRUE)
 
 library(magrittr)
 
 #bim_file <- "~/research/ukb-intervals/dat/plink_files/ukb/chr22.bim"
+hsq <- snakemake@config[["hsq"]]
+p_causal <- snakemake@config[["pcausal"]]
 bim_file <- snakemake@input[[1]]
 bim_tib <- vroom::vroom(bim_file, col_names = FALSE) %>%
   dplyr::mutate(snp_index = 1:nrow(.)) %>%

@@ -1,4 +1,9 @@
+localrules: all, make_sym_links, make_dummy_fam, sym_links_plink_files_for_gemma 
+
+configfile: '../config/config_hsq0.1_pcausal0.1.yaml'
+
 rule make_sym_links:
+    log: 'logs/make_sym_links.log'
     input:
         original_bed = '/net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr22.bed',
         original_bim = '/net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr22.bim'
@@ -9,56 +14,140 @@ rule make_sym_links:
         'ln -s input.original_bed output.sym_bed; ln -s input.original_bim output.sym_bim'
 
 rule make_dummy_fam:
+    log: 'logs/make_dummy_fam.log'
     input:
         '/net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr22.fam'
     output: 
         'dat/chr22.fam'
-    shell: 
-        'Rscript -e Rscript/make_dummy_fam.R'
+    script: 
+        'Rscript/make_dummy_fam.R'
 
 rule partition_subjects:
+    log: 'logs/partition_subjects.log'
     input: 'dat/chr22.fam'
     output: 
-        'dat/validation-ids.txt',
-        'dat/verification-ids.txt',
-        'dat/test-ids-fold1.txt',
-        'dat/test-ids-fold2.txt',
-        'dat/test-ids-fold3.txt',
-        'dat/test-ids-fold4.txt',
-        'dat/test-ids-fold5.txt',
-        'dat/training-ids-fold1.txt',
-        'dat/training-ids-fold2.txt',
-        'dat/training-ids-fold3.txt',
-        'dat/training-ids-fold4.txt',
-        'dat/training-ids-fold5.txt'
-    shell: 
-        'Rscript -e Rscript/partition_subjects.R'
+        val_ids = 'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/validation-ids.txt',
+        verif_ids = 'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/verification-ids.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/test-ids-fold1.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/test-ids-fold2.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/test-ids-fold3.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/test-ids-fold4.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/test-ids-fold5.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/training-ids-fold1.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/training-ids-fold2.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/training-ids-fold3.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/training-ids-fold4.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/training-ids-fold5.txt'
+    script: 
+        'Rscript/partition_subjects.R'
 
 
 
 rule simulate_snp_effects:
+    log: 'logs/simulate_snp_effects.log'
     input: 
         'dat/chr22.bim'
     output:
-        'dat/snp_effects_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt'
-    shell:
-        'Rscript -e Rscript/simulate_snp_effects.R {config["hsq"]} {config["pcausal"]}'
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/snp_effects_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt'
+    script:
+        'Rscript/simulate_snp_effects.R'
 
 rule simulate_traits:
+    log: 'logs/simulate_traits.log'
     input:
         'dat/chr22.bed', 
         'dat/chr22.bim', 
         'dat/chr22.fam',
         effects = 'dat/snp_effects_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt'
     output: 
-        'dat/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.phen'
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.phen'
     shell: 
-        'gcta64 --bfile ../dat/simulations-ding/chr22 --simu-qt --simu-causal-loci  {input.effects} --simu-hsq {config["hsq"]} --simu-rep 10 --out {output}'
+        'gcta64 --bfile ../dat/simulations-ding/chr22 --simu-qt --simu-causal-loci  {input.effects} --simu-hsq {config["hsq"]} --simu-rep 5 --out {output}'
+  
   
 rule quantile_normalize_traits:
+    log: 'logs/quantile_normalize_traits.log'
     input:
-        'dat/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.phen'
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.phen'
     output: 
-        'dat/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}-NAs.fam',
-        'dat/sim_traits/fam_all_subjects/qn_traits_all_subjects_hsq{config["hsq"]}_pcausal{config["pcausal"]}.fam'
-        
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}-NAs.fam',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/sim_traits/fam_all_subjects/qn_traits_all_subjects_hsq{config["hsq"]}_pcausal{config["pcausal"]}.fam'
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/verification/pheno1_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/verification/pheno2_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/verification/pheno3_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/verification/pheno4_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt',
+        'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/verification/pheno5_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt'
+    script:
+        'Rscript/quantile_normalize_traits.R'
+
+
+rule sym_links_plink_files_for_gemma:
+    log: "logs/sym_links_plink_files_for_gemma"
+    input:
+      "dat/sim_traits/sims_Chr22_hsq{config['hsq']}_pcausal{config['pcausal']}-NAs.fam"
+    output:
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.bed"
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.bim"
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.fam"
+    shell:
+      """
+      newdir=dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']} 
+      mkdir -p ${newdir} 
+      for chr in `seq 1 22`; do
+        ln -s /net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr${chr}.bed ${newdir}/chr${chr}.bed 
+        ln -s /net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr${chr}.bim ${newdir}/chr${chr}.bim 
+        ln -s dat/sim_traits/sims_Chr22_hsq{config['hsq']}_pcausal{config['pcausal']}-NAs.fam ${newdir}/chr${chr}.fam 
+      done
+      """
+
+rule gemma:
+    log: "logs/gemma.log"
+    input: 
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.bed"
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.bim"
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.fam"
+    output:
+      "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/output/summary_ukb_pheno1_fold1_chr1.assoc.txt"
+    shell: 
+      """
+      let k=0
+      type=ukb
+      gemma=/net/mulan/home/yasheng/comparisonProject/program/gemma-0.98.1-linux-static
+
+      for p in `seq 1 5`; do
+        for fold in 1 2 3 4 5; do 
+          for chr in `seq 1 22`; do
+            let k=${k}+1
+            if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
+
+              bfile=~/research/ukb-intervals/dat/simulations-ding/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr${chr}
+              summ=summary_${type}_pheno${p}_fold${fold}_chr${chr}
+
+              let col=(${p}-1)\*5+${fold}
+
+              outpath=dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}
+              mkdir -p ${outpath}
+              cd ${outpath}
+              file=output/${summ}.assoc.txt
+              if [ ! -f "$file" ]; then # check if file doesn't exist
+                ${gemma} -bfile ${bfile} -notsnp -lm 1 -n ${col} -o ${summ}
+              fi
+            fi
+
+            done 
+          done
+        done
+"""
+
+
+rule ldsc: 
+    log: "logs/ldsc.log"
+    input:
+    output:
+    shell:
+    """
+    
+    """
+    
+    
+    
