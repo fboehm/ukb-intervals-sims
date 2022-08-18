@@ -65,11 +65,11 @@ rule simulate_traits:
         'dat/chr22.bed', 
         'dat/chr22.bim', 
         'dat/chr22.fam',
-        effects = 'dat/snp_effects_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt'
+        effects = 'dat/hsq0.1_pcausal0.1/snp_effects_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.txt'
     output: 
         'dat/hsq{config["hsq"]}_pcausal{config["[pcausal"]}/sim_traits/sims_Chr22_hsq{config["hsq"]}_pcausal{config["pcausal"]}.phen'
     shell: 
-        'gcta64 --bfile ../dat/simulations-ding/chr22 --simu-qt --simu-causal-loci  {input.effects} --simu-hsq {config["hsq"]} --simu-rep 5 --out {output}'
+        'gcta64 --bfile ../dat/chr22 --simu-qt --simu-causal-loci  {input.effects} --simu-hsq {config["hsq"]} --simu-rep 5 --out {output}'
   
   
 rule quantile_normalize_traits:
