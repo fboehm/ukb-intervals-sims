@@ -1,3 +1,8 @@
+#!/usr/bin/env Rscript
+
+hsq <- 0.1
+pcausal <- 0.1
+
 library(magrittr)
 
 false_to_na <- function(vec){
@@ -5,22 +10,25 @@ false_to_na <- function(vec){
   return(vec)
 }
 
-trait_file <- snakemake@input[[1]]
-output_with_nas <- snakemake@output[[1]]
-output_without_nas <- snakemake@output[[2]]
-  
+trait_file <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/sim_traits/sims_Chr22_hsq", hsq, "_pcausal", pcausal, ".phen")
+output_with_nas <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/sim_traits/sims_Chr22_hsq", hsq, "_pcausal", pcausal, "-NAs.fam")
+output_without_nas <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/sim_traits/fam_all_subjects/qn_traits_all_subjects_hsq", hsq, "_pcausal", pcausal, ".fam")
+                             
 trait_tib <- vroom::vroom(trait_file, col_names = FALSE) %>%
-  dplyr::select(-13) # drop the last column which contains only NAs
+  dplyr::select(-8) # drop the last column which contains only NAs
+
+ids <- vroom::vroom(file = "../dat/chr22.fam", col_names = FALSE)
+
 
 # read files to get ids for training, test, and validation sets
-val_ids <- vroom::vroom(file = "../dat/validation-ids.txt", col_names = TRUE)
-verif_ids <- vroom::vroom(file = "../dat/verification-ids.txt", col_names = TRUE)
+val_ids <- vroom::vroom(file = "../dat/hsq0.1_pcausal0.1/validation-ids.txt", col_names = FALSE)
+verif_ids <- vroom::vroom(file = "../dat/hsq0.1_pcausal0.1/verification-ids.txt", col_names = FALSE)
 test_ids <- list()
 training_ids <- list()
 #
 for (fold in 1:5){
-  test_ids[[fold]] <- vroom::vroom(file = paste0("../dat/test-ids-fold", fold, ".txt"), col_names = FALSE)
-  training_ids[[fold]] <- vroom::vroom(file = paste0("../dat/training-ids-fold", fold, ".txt"), col_names = FALSE)
+  test_ids[[fold]] <- vroom::vroom(file = paste0("../dat/hsq0.1_pcausal0.1/test-ids-fold", fold, ".txt"), col_names = FALSE)
+  training_ids[[fold]] <- vroom::vroom(file = paste0("../dat/hsq0.1_pcausal0.1/training-ids-fold", fold, ".txt"), col_names = FALSE)
   
   # use training set only to determine the distribution for quantile normalization
   # then, use the inferred distribution to quantile normalize, separately, the training and the validation and the verification and the test sets.
@@ -124,7 +132,7 @@ qt_verif <- qn_tib %>%
   dplyr::arrange(X1) %>%
   dplyr::filter(X1 %in% verif_ids$X1)
 for (col_num in 6:10){
-  outfile <- snakemake@output[[col_num - 3]]
+  outfile <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/verification/pheno", col_num - 5, "_hsq", hsq, "_pcausal", pcausal, ".txt")
   qt_verif %>%
     dplyr::select(dplyr::all_of(col_num)) %>%
     vroom::vroom_write(file = outfile, col_names = FALSE)
