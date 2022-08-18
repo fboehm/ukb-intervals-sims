@@ -5,8 +5,8 @@
 #SBATCH --job-name=herit
 #SBATCH --mem-per-cpu=10G
 #SBATCH --array=1-25
-#SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals/cluster_outputs/04_herit_%j_%a.out
-#SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals/cluster_outputs/04_herit_%j_%a.err
+#SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/04_herit_%j_%a.out
+#SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/04_herit_%j_%a.err
 
 pc=0.1
 hsq=0.1
