@@ -137,3 +137,15 @@ for (col_num in 6:10){
     dplyr::select(dplyr::all_of(col_num)) %>%
     vroom::vroom_write(file = outfile, col_names = FALSE)
 }
+
+# make the pheno files for validation set
+qt_valid <- qn_tib %>%
+  dplyr::arrange(X1) %>%
+  dplyr::filter(X1 %in% val_ids$X1)
+for (col_num in 6:10){
+  outfile <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/validation/pheno", col_num - 5, "_hsq", hsq, "_pcausal", pcausal, ".txt")
+  qt_valid %>%
+    dplyr::select(dplyr::all_of(col_num)) %>%
+    vroom::vroom_write(file = outfile, col_names = FALSE)
+}
+
