@@ -2,10 +2,10 @@
 
 ```{r, results = "hide", message = FALSE}
 ## read fam file with qn trait values for all subjects & all traits
-fam_all <- vroom::vroom(here::here("dat", paste0("hsq", hsq, "_pcausal", pc), "sim_traits", "fam_all_subjects", paste0("qn_traits_all_subjects_hsq", h2, "_pcausal", pc, ".fam")), col_names = FALSE)
+fam_all <- vroom::vroom(here::here("dat", paste0("hsq", h2, "_pcausal", pc), "sim_traits", "fam_all_subjects", paste0("qn_traits_all_subjects_hsq", h2, "_pcausal", pc, ".fam")), col_names = FALSE)
 ##
 phe_num <- x
-fam_file <- here::here("dat", paste0("hsq", hsq, "_pcausal", pc), "gemma", "chr1.fam")
+fam_file <- here::here("dat", paste0("hsq", h2, "_pcausal", pc), "gemma", "chr1.fam")
   # read fam file
 fam <- readr::read_table(file = fam_file, col_names = FALSE)
 for (cross_num in 1:5){
@@ -26,7 +26,7 @@ for (cross_num in 1:5){
                  chr_num, 
                  "_best.dbslmm.txt.profile")
     
-    profile_fn <- here::here("dat", paste0("hsq", hsq, "_pcausal", pc), "DBSLMM", pfn)
+    profile_fn <- here::here("dat", paste0("hsq", h2, "_pcausal", pc), "DBSLMM", pfn)
     scores[[chr_num]] <- readr::read_table(profile_fn, col_names = TRUE)
     colnames(scores[[chr_num]]) <- paste0(colnames(scores[[chr_num]]), "_chr", chr_num)
   }
@@ -38,7 +38,7 @@ for (cross_num in 1:5){
   s2 <- scores_df %>%
     dplyr::select(sum_scores)
   # read idx file
-  idx_fn <- here::here("dat", paste0("hsq", hsq, "_pcausal", pc), paste0("test-ids-fold", cross_num, ".txt")) 
+  idx_fn <- here::here("dat", paste0("hsq", h2, "_pcausal", pc), paste0("test-ids-fold", cross_num, ".txt")) 
   idx <- readr::read_table(idx_fn, col_names = FALSE) %>%
     dplyr::rename(fam_id = 1, subject_id = 2) %>%
     dplyr::select(fam_id)
@@ -63,9 +63,9 @@ subjects belonging to the verification set.
 
 
 ```{r, results='hide', message = FALSE}
-verif_ids_fn <- here::here("dat", paste0("hsq", hsq, "_pcausal", pc), "verification-ids.txt")
-verif_ids <- vroom::vroom(verif_ids_fn, col_names = TRUE)
-verif_fn <- here::here("dat", paste0("hsq", hsq, "_pcausal", pc), "verification", paste0("pheno", phe_num, "_hsq", hsq, "_pcausal", pc,".txt"))
+verif_ids_fn <- here::here("dat", paste0("hsq", h2, "_pcausal", pc), "verification-ids.txt")
+verif_ids <- vroom::vroom(verif_ids_fn, col_names = FALSE)
+verif_fn <- here::here("dat", paste0("hsq", h2, "_pcausal", pc), "verification", paste0("pheno", phe_num, "_hsq", h2, "_pcausal", pc,".txt"))
 # above file contains phenotype values for the verification set
 verification_true_pheno_tib <- readr::read_table(verif_fn, col_names = FALSE) %>%
   dplyr::bind_cols(verif_ids) %>%
@@ -80,7 +80,7 @@ out <- list()
 for (cross_num in 1:5){
   foo <- list()
   for (chr_num in 1:22){
-    fn <- here::here("dat", paste0("hsq", hsq, "_pcausal", pc), "verification", paste0("allele-scores_hsq", h2, "_pcausal", pc), paste0("pred_ukb_pheno", phe_num, "_fold", cross_num, "_chr", chr_num, "_best.dbslmm.txt.profile"))
+    fn <- here::here("dat", paste0("hsq", h2, "_pcausal", pc), "verification", paste0("allele-scores_hsq", h2, "_pcausal", pc), paste0("pred_ukb_pheno", phe_num, "_fold", cross_num, "_chr", chr_num, "_best.dbslmm.txt.profile"))
     foo[[chr_num]] <- readr::read_table(fn) 
   }
   out[[cross_num]] <- foo 
