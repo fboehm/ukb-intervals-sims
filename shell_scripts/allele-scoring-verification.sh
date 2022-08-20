@@ -37,7 +37,7 @@ outpath=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/verificati
 mkdir -p ${outpath}
 preddbslmmt=${outpath}/pred_ukb_pheno${p}_fold${fold}_chr${chr}_best.dbslmm.txt
 #gunzip ${esteffdbslmmt}.gz
-plink-1.9 --silent --bfile ${bfile} --score ${esteffdbslmmt} 1 2 4 sum  --out ${preddbslmmt}
+plink-1.9 --silent --bfile ${bfile} --score ${esteffdbslmmt} 1 2 4 sum  --out ${preddbslmmt} --allow-no-sex
 # plink-1.9 --silent --bfile ${bfile} --score ${esteffdbslmmt} 1 2 4 sum --keep ${idxagg} --out ${aggdbslmm
 fi
 done
