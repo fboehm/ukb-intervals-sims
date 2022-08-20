@@ -1,0 +1,74 @@
+---
+title: "Cross-validation-plus for Simulated traits"
+author: "Frederick J. Boehm"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::html_document2:
+    number_sections: false
+bibliography: my.bib
+params:
+  hsq: 0.1
+  pcausal: 0.1
+  alpha: 0.1
+  n_traits: 5
+---
+
+```{r}
+library(magrittr)
+```
+
+
+### How to use the results files from DBSLMM
+
+
+```{r, echo = TRUE, message = FALSE}
+hsq <- params$hsq
+pcausal <- params$pcausal
+n_traits <- params$n_traits
+alpha <- params$alpha
+out <- list()
+res <- lapply(1:n_traits, function(x, h2 = hsq, pc = pcausal) {
+  knitr::knit_child(
+    'cv-plus-simulations-child.Rmd', 
+    envir = environment(), 
+    quiet = TRUE
+  )
+  get("out")
+})
+resfn <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/res.rds")
+saveRDS(res, file = resfn)
+```
+
+
+```{r}
+coverages <- lapply(X = res, 
+                    FUN = function(mytib){
+  mytib %>%
+    dplyr::summarise(coverage = mean(in_interval))
+       }
+)
+do.call("rbind", coverages) %>%
+  tibble::as_tibble() %>%
+  dplyr::mutate(trait_num = 1:length(res))
+```
+
+## Boxplots of interval width
+
+```{r}
+for (i in 1:length(res)){
+  res[[i]] <- res[[i]] %>%
+    dplyr::mutate(trait_num = i)
+}
+dplyr::bind_rows(res) %>%
+  ggplot2::ggplot() + 
+  ggplot2::geom_violin(ggplot2::aes(x = trait_num, y = interval_width, group = trait_num))
+```
+
+
+
+# References
+
+
+
+
+
