@@ -26,7 +26,9 @@ hsq <- params$hsq
 pcausal <- params$pcausal
 n_traits <- params$n_traits
 alpha <- params$alpha
-out <- list()
+resfn <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/res.rds")
+if (!file.exists(resfn)){
+  out <- list()
 res <- lapply(1:n_traits, function(x, h2 = hsq, pc = pcausal) {
   knitr::knit_child(
     'cv-plus-simulations-child.Rmd', 
@@ -35,8 +37,11 @@ res <- lapply(1:n_traits, function(x, h2 = hsq, pc = pcausal) {
   )
   get("out")
 })
-resfn <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/res.rds")
+
 saveRDS(res, file = resfn)
+} else {
+  res <- readRDS(resfn)
+}
 ```
 
 
