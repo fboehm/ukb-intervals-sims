@@ -97,7 +97,7 @@ rule sym_links_plink_files_for_gemma:
       "dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']}/chr1.fam"
     shell:
       """
-      newdir=dat/gemma_hsq{config['hsq']}_pcausal{config['pcausal']} 
+      newdir=dat/hsq{config['hsq']}_pcausal{config['pcausal']}/gemma 
       mkdir -p ${newdir} 
       for chr in `seq 1 22`; do
         ln -s /net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr${chr}.bed ${newdir}/chr${chr}.bed 

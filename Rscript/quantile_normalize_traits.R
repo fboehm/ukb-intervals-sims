@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-hsq <- 0.1
+hsq <- 0.5
 pcausal <- 0.1
 
 library(magrittr)
@@ -13,6 +13,28 @@ false_to_na <- function(vec){
 trait_file <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/sim_traits/sims_Chr22_hsq", hsq, "_pcausal", pcausal, ".phen")
 output_with_nas <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/sim_traits/sims_Chr22_hsq", hsq, "_pcausal", pcausal, "-NAs.fam")
 output_without_nas <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/sim_traits/fam_all_subjects/qn_traits_all_subjects_hsq", hsq, "_pcausal", pcausal, ".fam")
+
+# make directories needed
+output_dir <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/sim_traits/fam_all_subjects")
+if (!dir.exists(output_dir)){
+  dir.create(output_dir)
+} else {
+  print("Dir already exists!")
+}
+output_dir <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/validation")
+if (!dir.exists(output_dir)){
+  dir.create(output_dir)
+} else {
+  print("Dir already exists!")
+}
+
+output_dir <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/verification")
+if (!dir.exists(output_dir)){
+  dir.create(output_dir)
+} else {
+  print("Dir already exists!")
+}
+
                              
 trait_tib <- vroom::vroom(trait_file, col_names = FALSE) %>%
   dplyr::select(-8) # drop the last column which contains only NAs
@@ -21,14 +43,14 @@ ids <- vroom::vroom(file = "../dat/chr22.fam", col_names = FALSE)
 
 
 # read files to get ids for training, test, and validation sets
-val_ids <- vroom::vroom(file = "../dat/hsq0.1_pcausal0.1/validation-ids.txt", col_names = FALSE)
-verif_ids <- vroom::vroom(file = "../dat/hsq0.1_pcausal0.1/verification-ids.txt", col_names = FALSE)
+val_ids <- vroom::vroom(file = paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/validation-ids.txt"), col_names = FALSE)
+verif_ids <- vroom::vroom(file = paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/verification-ids.txt"), col_names = FALSE)
 test_ids <- list()
 training_ids <- list()
 #
 for (fold in 1:5){
-  test_ids[[fold]] <- vroom::vroom(file = paste0("../dat/hsq0.1_pcausal0.1/test-ids-fold", fold, ".txt"), col_names = FALSE)
-  training_ids[[fold]] <- vroom::vroom(file = paste0("../dat/hsq0.1_pcausal0.1/training-ids-fold", fold, ".txt"), col_names = FALSE)
+  test_ids[[fold]] <- vroom::vroom(file = paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/test-ids-fold", fold, ".txt"), col_names = FALSE)
+  training_ids[[fold]] <- vroom::vroom(file = paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/training-ids-fold", fold, ".txt"), col_names = FALSE)
   
   # use training set only to determine the distribution for quantile normalization
   # then, use the inferred distribution to quantile normalize, separately, the training and the validation and the verification and the test sets.
@@ -116,16 +138,9 @@ qn_tib2 <- qn_tib %>%
 #####
 qn_tib2 %>%
   vroom::vroom_write(file = output_with_nas, col_names = FALSE)
-  #vroom::vroom_write(file = paste0("../dat/sim_traits/sims_Chr22_hsq", hsq, "_pcausal", p_causal, "-NAs.fam"), col_names = FALSE)
 # write qn traits for all subjects in a single fam file
 qn_tib %>%
   vroom::vroom_write(file = output_without_nas, col_names = FALSE)
-  #vroom::vroom_write(here::here("dat", 
-  #                              "sim_traits", 
-  #                              "fam_all_subjects", 
-  #                              paste0("qn_traits_all_subjects_hsq", hsq, "_pcausal", p_causal, ".fam")
-  #), 
-  #col_names = FALSE)
 
 # make the pheno files for verification set
 qt_verif <- qn_tib %>%

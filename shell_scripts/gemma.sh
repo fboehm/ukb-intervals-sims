@@ -6,12 +6,12 @@
 #SBATCH --job-name=gemma
 #SBATCH --mem=2G
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-550%60
-#SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gemma_hsq0.1_pcausal0.1_%a.out
-#SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gemma_hsq0.1_pcausal0.1_%a.err
+#SBATCH --array=1-550%70
+#SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gemma_%j_%a.out
+#SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gemma_%j_%a.err
 
 
-hsq=0.1
+hsq=0.5
 pc=0.1
 
 
