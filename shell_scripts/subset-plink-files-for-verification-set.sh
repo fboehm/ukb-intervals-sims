@@ -9,7 +9,7 @@
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals/cluster_outputs/subset-plink-verif_%a.out
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals/cluster_outputs/subset-plink-verif_%a.err
 
-hsq=0.1
+hsq=0.5
 pcausal=0.1
 
  
