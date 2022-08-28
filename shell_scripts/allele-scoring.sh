@@ -4,14 +4,14 @@
 #SBATCH --time=1-00:00:00
 #SBATCH --job-name=allele-scoring
 #SBATCH --mem=2G
-#SBATCH --array=1-550%300
+#SBATCH --array=1-550%100
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/allele-scoring_%j_%a.out
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/allele-scoring_%j_%a.err
 
 let k=0
 
 # h & p are command line args
-hsq=0.1
+hsq=0.5
 pcausal=0.1
 
 

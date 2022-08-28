@@ -11,7 +11,7 @@
 let k=0
 
 # h & p are command line args
-hsq=0.1
+hsq=0.5
 pcausal=0.1
 
 for chr in `seq 1 22`;do

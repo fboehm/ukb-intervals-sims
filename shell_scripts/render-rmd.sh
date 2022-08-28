@@ -8,5 +8,5 @@
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/render-rmd_%j_%a.err
 
 Rscript -e 'rmarkdown::render(input = "~/research/ukb-intervals-sims/Rmd/cv-plus-simulations.Rmd",
-                              output_file = "~/research/ukb-intervals-sims/Rmd/cv-plus-simulations-alpha0.1-hsq0.1-pcausal0.1.html",
-                              params = list(hsq=0.1, pcausal=0.1))'
+                              output_file = "~/research/ukb-intervals-sims/Rmd/cv-plus-simulations-alpha0.1-hsq0.5-pcausal0.1.html",
+                              params = list(hsq=0.5, pcausal=0.1))'
