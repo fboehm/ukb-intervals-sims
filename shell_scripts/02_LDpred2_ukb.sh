@@ -18,7 +18,7 @@ let k=0
 let thread=${SLURM_CPUS_PER_TASK}
 
 compstr=/net/mulan/disk2/yasheng/comparisonProject/
-LDpred2=/net/mulan/disk2/yasheng/comparisonProject/code/02_method/02_LDpred2.R
+LDpred2=../Rscript/02_LDpred2.R
 ref=ukb
 dat=continuous
 
