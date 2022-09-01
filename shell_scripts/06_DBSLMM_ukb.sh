@@ -26,7 +26,7 @@ DBSLMM=${compstr}code/02_method/06_DBSLMM_script.sh
 #DBSLMM=06_DBSLMM_script.sh
 DBSLMMpath=/net/mulan/home/yasheng/predictionProject/code/
 blockf=${compstr}LDblock_EUR/chr
-ref=${compstr}04_reference/ukb/geno/chr
+#ref=${compstr}04_reference/ukb/geno/chr
 
 
 for p in `seq 1 5`; do
