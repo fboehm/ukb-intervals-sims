@@ -35,62 +35,41 @@ if (!dir.exists(output_dir)){
   print("Dir already exists!")
 }
 
-                             
+# read trait tib
 trait_tib <- vroom::vroom(trait_file, col_names = FALSE) %>%
   dplyr::select(-8) # drop the last column which contains only NAs
+# qn the entire trait_tib
+trait_qn <- preprocessCore::normalize.quantiles(x = as.matrix(trait_tib[, 3:7]))
+trait_tib_qn <- trait_tib %>%
+  dplyr::select(X1, X2) %>%
+  dplyr::bind_cols(tibble::as_tibble(trait_qn))
 
 ids <- vroom::vroom(file = "../dat/chr22.fam", col_names = FALSE)
 
-
-# read files to get ids for training, test, and validation sets
-val_ids <- vroom::vroom(file = paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/validation-ids.txt"), col_names = FALSE)
-verif_ids <- vroom::vroom(file = paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/verification-ids.txt"), col_names = FALSE)
+# read files to get ids for training, test, verification, and validation sets
+val_ids <- vroom::vroom(file = "../dat/validation-ids.txt", col_names = FALSE)
+verif_ids <- vroom::vroom(file = "../dat/verification-ids.txt", col_names = FALSE)
 test_ids <- list()
 training_ids <- list()
-#
+ref_ids <- vroom::vroom(file = "../dat/reference/01_idx.txt", col_names = FALSE)
+# subset to get 
+trait_tib_validation_qn <- trait_tib_qn %>%
+  dplyr::filter(X1 %in% val_ids$X1)
+trait_tib_verification_qn <- trait_tib_qn %>%
+  dplyr::filter(X1 %in% verif_ids$X1)
+trait_tib_reference_qn <- trait_tib_qn %>%
+  dplyr::filter(X1 %in% ref_ids$X1)
+
+
+
 for (fold in 1:5){
-  test_ids[[fold]] <- vroom::vroom(file = paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/test-ids-fold", fold, ".txt"), col_names = FALSE)
-  training_ids[[fold]] <- vroom::vroom(file = paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/training-ids-fold", fold, ".txt"), col_names = FALSE)
-  
-  # use training set only to determine the distribution for quantile normalization
-  # then, use the inferred distribution to quantile normalize, separately, the training and the validation and the verification and the test sets.
-  trait_tib_training <- trait_tib %>%
-    dplyr::filter(X1 %in% training_ids[[fold]]$X1)
-  trait_tib_test <- trait_tib %>%
-    dplyr::filter(X1 %in% test_ids[[fold]]$X1)
-  trait_tib_validation <- trait_tib %>%
-    dplyr::filter(X1 %in% val_ids$X1)
-  trait_tib_verification <- trait_tib %>%
-    dplyr::filter(X1 %in% verif_ids$X1)
-  
-  
-  training_qn <- preprocessCore::normalize.quantiles(as.matrix(trait_tib_training[, 3:7]))
-  target_test <- preprocessCore::normalize.quantiles.determine.target(x = training_qn, target.length = nrow(trait_tib_test))
-  test_qn <- preprocessCore::normalize.quantiles.use.target(x = as.matrix(trait_tib_test[, 3:7]), target = target_test)
-  target_validation <- preprocessCore::normalize.quantiles.determine.target(x = training_qn, target.length = nrow(trait_tib_validation))
-  validation_qn <- preprocessCore::normalize.quantiles.use.target(x = as.matrix(trait_tib_validation[, 3:7]), target = target_validation)
-  target_verification <- preprocessCore::normalize.quantiles.determine.target(x = training_qn, target.length = nrow(trait_tib_verification))
-  verification_qn <- preprocessCore::normalize.quantiles.use.target(x = as.matrix(trait_tib_verification[, 3:7]), target = target_verification)
-  
-  ######
-  training_qn_tib <- training_ids[[fold]] %>%
-    dplyr::bind_cols(tibble::as_tibble(training_qn))
-  test_qn_tib <- test_ids[[fold]] %>%
-    dplyr::bind_cols(tibble::as_tibble(test_qn))
-  validation_qn_tib <- val_ids %>%
-    dplyr::bind_cols(tibble::as_tibble(validation_qn))
-  verification_qn_tib <- verif_ids %>%
-    dplyr::bind_cols(tibble::as_tibble(verification_qn))
-  
-  qn_tib_pre <- training_qn_tib %>%
-    dplyr::bind_rows(test_qn_tib) %>%
-    dplyr::bind_rows(validation_qn_tib) %>%
-    dplyr::bind_rows(verification_qn_tib) %>%
-    dplyr::arrange(X1) #%>%
-  qn_tib <- qn_tib_pre %>%
-    dplyr::left_join(ids, by = c("X1", "X2")) %>%
-    dplyr::select(X1, X2, X3, X4, X5, V1:V5)
-} # end loop over folds
+  test_ids[[fold]] <- vroom::vroom(file = paste0("../dat/test-ids-fold", fold, ".txt"), col_names = FALSE)
+  training_ids[[fold]] <- vroom::vroom(file = paste0("../dat/training-ids-fold", fold, ".txt"), col_names = FALSE)
+}  
+# assemble a single tibble with all qn trait values
+qn_tib <- trait_tib_qn %>%
+  dplyr::left_join(ids, by = c("X1", "X2")) %>%
+  dplyr::select(X1, X2, X3, X4, X5, V1:V5)
 
 
 # make binary indicators of membership in training set
