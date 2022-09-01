@@ -10,7 +10,7 @@
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%j_%a.out
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%j_%a.err
 
-hsq=0.5
+hsq=0.1
 pcausal=0.1
 
 
