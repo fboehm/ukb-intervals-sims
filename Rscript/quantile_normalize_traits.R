@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-hsq <- 0.5
+hsq <- 0.1
 pcausal <- 0.1
 
 library(magrittr)
