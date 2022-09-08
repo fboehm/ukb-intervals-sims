@@ -26,9 +26,10 @@ G2 <- bigsnpr::snp_fastImputeSimple(Gna = bs$genotypes,
 
 ```{r}
 pcausal <- 0.1
+hsq <- 0.5
 set.seed(2022-09-07)
 ph <- bigsnpr::snp_simuPheno(G = G2, 
-                       h2 = 0.5, 
+                       h2 = hsq, 
                        M = floor(pcausal * ncol(G2)),
                        K = 0.5,
                        effects.dist = "gaussian",
