@@ -1,0 +1,44 @@
+---
+title: "Simulating binary traits with bigsnpr"
+author: "Frederick J. Boehm"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+if (!file.exists("../dat/chr22.bk")){
+  bed <- bigsnpr::snp_readBed("../dat/chr22.bed")
+} else {
+  bed <- "../dat/chr22.rds"
+}
+bs <- bigsnpr::snp_attach(bed)
+# impute missing genotypes
+G2 <- bigsnpr::snp_fastImputeSimple(Gna = bs$genotypes, 
+                           ncores = bigparallelr::nb_cores()
+                           )
+```
+
+
+```{r}
+pcausal <- 0.1
+set.seed(2022-09-07)
+ph <- bigsnpr::snp_simuPheno(G = G2, 
+                       h2 = 0.5, 
+                       M = floor(pcausal * ncol(G2)),
+                       K = 0.5,
+                       effects.dist = "gaussian",
+                       ncores = bigparallelr::nb_cores()
+                       )
+# check case proportion
+library(magrittr)
+ph$pheno %>% table()
+```
+
+```{r}
+
+```
