@@ -25,21 +25,49 @@ G2 <- bigsnpr::snp_fastImputeSimple(Gna = bs$genotypes,
 
 
 ```{r}
+library(magrittr)
 pcausal <- 0.1
 hsq <- 0.5
 set.seed(2022-09-07)
-ph <- bigsnpr::snp_simuPheno(G = G2, 
+for (i in 1:5){
+  ph <- bigsnpr::snp_simuPheno(G = G2, 
                        h2 = hsq, 
                        M = floor(pcausal * ncol(G2)),
                        K = 0.5,
                        effects.dist = "gaussian",
                        ncores = bigparallelr::nb_cores()
                        )
+  fn <- paste0("../dat-binary/hsq", hsq, "_pcausal", pcausal, "/pheno", i, ".txt")
+  tibble::as_tibble(ph$pheno) %>%
+    vroom::vroom_write(file = fn)
+}  
+
 # check case proportion
-library(magrittr)
 ph$pheno %>% table()
 ```
 
 ```{r}
+# simulate traits for other settings of hsq and pcausal
+pcausal_vec <- c(0.001, 0.01, 0.1, 1, 0.1)
+hsq_vec <- c(0.2, 0.2, 0.2, 0.2, 0.1)
+set.seed(2022-09-08)
+for (j in 1:5){
+  hsq <- hsq_vec[j]
+  pcausal <- pcausal_vec[j]
+  output_dir <- paste0("../dat-binary/hsq", hsq, "_pcausal", pcausal)
+  if (!dir.exists(output_dir)) {dir.create(output_dir)}
+  for (i in 1:5){
+    ph <- bigsnpr::snp_simuPheno(G = G2, 
+                       h2 = hsq, 
+                       M = floor(pcausal * ncol(G2)),
+                       K = 0.5,
+                       effects.dist = "gaussian",
+                       ncores = bigparallelr::nb_cores()
+                       )
+    fn <- paste0(output_dir, "/pheno", i, ".txt")
+    tibble::as_tibble(ph$pheno) %>%
+      vroom::vroom_write(file = fn)
+  }
+}  
 
 ```
