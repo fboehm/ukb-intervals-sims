@@ -63,8 +63,8 @@ rm ${bfileSubP}.log
 # impute for verification
 geno_impute=${compStr}code/01_process_dat/05_geno_imputation.R
 input=${bfileSubP}
-output=${fbStr}validation/geno/impute/chr${chr}
-mkdir -p ${fbStr}validation/geno/impute
+output=${fbStr}verification/geno/impute/chr${chr}
+mkdir -p ${fbStr}verification/geno/impute
 
 Rscript ${geno_impute} --plinkin ${input} --plinkout ${output}
 

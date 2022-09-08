@@ -34,8 +34,7 @@ rm ${bfileRef}.bed
 rm ${bfileRef}.bim
 rm ${bfileRef}.fam
 rm ${bfileRefP}.log
-
+fi
 done
 
 
-fi

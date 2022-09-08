@@ -10,7 +10,7 @@
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%j_%a.out
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%j_%a.err
 
-hsq=0.1
+hsq=0.5
 pcausal=0.1
 
 
@@ -20,14 +20,15 @@ let thread=5
 dat=continuous
 type=t
 
+fbStr=~/research/ukb-intervals-sims/dat/
+
 compstr=/net/mulan/disk2/yasheng/comparisonProject/
 plink=/usr/cluster/bin/plink-1.9
-DBSLMM=${compstr}code/02_method/06_DBSLMM_script.sh
-#DBSLMM=06_DBSLMM_script.sh
+DBSLMM=06_DBSLMM_script.sh
 DBSLMMpath=/net/mulan/home/yasheng/predictionProject/code/
 blockf=${compstr}LDblock_EUR/chr
 #ref=${compstr}04_reference/ukb/geno/chr
-
+ref=${fbStr}reference/ukb/geno/chr
 
 for p in `seq 1 5`; do
 for cross in 1 2 3 4 5; do
@@ -53,7 +54,7 @@ if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
 
 # 
 #val=${compstr}03_subsample/${dat}/pheno${p}/val/ukb/impute_inter/chr
-val=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/validation/chr
+val=~/research/ukb-intervals-sims/dat/validation/geno/chr
 
 if [[ "$dat" == "continuous" ]]
 then

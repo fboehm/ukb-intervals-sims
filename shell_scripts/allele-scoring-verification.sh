@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --partition=mulan,main
+#SBATCH --partition=main
 #SBATCH --time=1-00:00:00
 #SBATCH --job-name=allele-verif
 #SBATCH --mem=2G
@@ -11,7 +11,7 @@
 let k=0
 
 # h & p are command line args
-hsq=0.5
+hsq=0.1
 pcausal=0.1
 
 for chr in `seq 1 22`;do
@@ -24,7 +24,7 @@ if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
 # bfile
 #compstr1=/net/mulan/disk2/yasheng/comparisonProject/
 #compstr=/net/mulan/home/yasheng/comparisonProject/
-bfile=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/verification/chr${chr}
+bfile=~/research/ukb-intervals-sims/dat/verification/geno/chr${chr}
 #bfile=/net/mulan/disk2/yasheng/predictionProject/plink_file/hm3/chr${chr}
 #idxtest=${compstr1}02_pheno/01_test_idx_c/idx_pheno${p}_cross${cross}.txt
 #idxtest=~/research/ukb-intervals/dat/simulations-ding/test-ids-fold${fold}.txt

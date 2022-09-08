@@ -8,11 +8,11 @@
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/04_herit_%j_%a.out
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/04_herit_%j_%a.err
 
-hsq=0.5
+hsq=0.1
 pc=0.1
 
 let k=0
-
+fbStr=~/research/ukb-intervals-sims/dat/
 ldsc=/net/mulan/home/yasheng/comparisonProject/program/ldsc/ldsc.py
 mkldsc=/net/mulan/home/yasheng/comparisonProject/code/02_method/04_mk_ldsc_summ.R
 compstr=/net/mulan/disk2/yasheng/comparisonProject/
@@ -25,7 +25,7 @@ for cross in `seq 1 5`; do
 let k=${k}+1
 if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
 
-ref=/net/mulan/disk2/yasheng/comparisonProject/04_reference/${reftype}/ldsc/
+ref=${fbStr}/reference/ukb/ldsc/
 
 if [[ "$dat" == "c" ]]
 then

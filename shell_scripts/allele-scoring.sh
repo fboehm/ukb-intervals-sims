@@ -11,7 +11,7 @@
 let k=0
 
 # h & p are command line args
-hsq=0.5
+hsq=0.1
 pcausal=0.1
 
 
@@ -31,7 +31,7 @@ if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
 bfile=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/gemma/chr${chr}
 #bfile=/net/mulan/disk2/yasheng/predictionProject/plink_file/hm3/chr${chr}
 #idxtest=${compstr1}02_pheno/01_test_idx_c/idx_pheno${p}_cross${cross}.txt
-idxtest=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/test-ids-fold${fold}.txt
+idxtest=~/research/ukb-intervals-sims/dat/test-ids-fold${fold}.txt
 
 #esteffdbslmmt=${compstr}05_internal_c/pheno${p}/DBSLMM/summary_hm3_cross${cross}_chr${chr}_best.dbslmm.txt
 esteffdbslmmt=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/DBSLMM/summary_ukb_pheno${p}_fold${fold}_chr${chr}_best.dbslmm.txt
