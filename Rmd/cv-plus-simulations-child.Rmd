@@ -38,7 +38,8 @@ for (cross_num in 1:5){
   s2 <- scores_df %>%
     dplyr::select(sum_scores)
   # read idx file
-  idx_fn <- here::here("dat", paste0("hsq", h2, "_pcausal", pc), paste0("test-ids-fold", cross_num, ".txt")) 
+  idx_fn <- here::here("dat", 
+                       paste0("test-ids-fold", cross_num, ".txt")) 
   idx <- readr::read_table(idx_fn, col_names = FALSE) %>%
     dplyr::rename(fam_id = 1, subject_id = 2) %>%
     dplyr::select(fam_id)
@@ -63,7 +64,7 @@ subjects belonging to the verification set.
 
 
 ```{r, results='hide', message = FALSE}
-verif_ids_fn <- here::here("dat", paste0("hsq", h2, "_pcausal", pc), "verification-ids.txt")
+verif_ids_fn <- here::here("dat", "verification-ids.txt")
 verif_ids <- vroom::vroom(verif_ids_fn, col_names = FALSE)
 verif_fn <- here::here("dat", paste0("hsq", h2, "_pcausal", pc), "verification", paste0("pheno", phe_num, "_hsq", h2, "_pcausal", pc,".txt"))
 # above file contains phenotype values for the verification set

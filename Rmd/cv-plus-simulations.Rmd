@@ -22,8 +22,8 @@ library(magrittr)
 
 
 ```{r, echo = TRUE, message = FALSE}
-hsq <- params$hsq
-pcausal <- params$pcausal
+(hsq <- params$hsq)
+(pcausal <- params$pcausal)
 n_traits <- params$n_traits
 alpha <- params$alpha
 resfn <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/res.rds")
