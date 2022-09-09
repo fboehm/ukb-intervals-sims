@@ -1,0 +1,60 @@
+---
+title: "Preparing inputs to LDpred2"
+author: "Frederick J. Boehm"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(magrittr)
+hsq <- 0.1
+pcausal <- 0.1
+pheno <- 1
+fold <- 1
+# read in gemma output for one trait-fold pair
+fn <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/gemma/output/summary_ukb_pheno", pheno, "_fold", fold, ".assoc.txt")
+summ <- vroom::vroom(fn, col_names = FALSE) %>%
+  dplyr::rename(chr = X1, 
+                rs_id = X2, 
+                position = X3, 
+                n_missing = X4, 
+                n_observed = X5, 
+                allele1 = X6, 
+                allele0 = X7, 
+                af = X8, 
+                effect = X9,
+                se = X10, 
+                pvalue = X11)
+  
+
+```
+We need to create a fam file - ie, in standard format, with exactly 6 columns - for use with LDpred2.
+
+We'll read Sheng's fam file to get subject IDs and then create a pheno column with NAs.
+
+```{r}
+fn_fam <- paste0("/net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr", chr, ".fam")
+new_fam <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/LDpred2/chr", chr, ".fam")
+fam <- vroom::vroom(fn_fam, col_names = FALSE) %>%
+  dplyr::select(1:4) %>%
+  dplyr::mutate(X5 = NA, X6 = NA)
+vroom::vroom_write(x = fam, file = new_fam)  
+```
+
+
+```{r}
+# read genotypes data for chr 22
+fn_bed <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/LDpred2/chr22.bed")
+fn_rds <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/LDpred2/chr22.rds")
+if (!file.exists(fn_rds)){
+  bed <- bigsnpr::snp_readBed(fn_bed)
+} else {
+  bed <- fn_rds
+}
+bs <- bigsnpr::snp_attach(bed)
+
+```
