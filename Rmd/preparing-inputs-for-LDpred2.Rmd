@@ -29,7 +29,7 @@ summ <- vroom::vroom(fn, col_names = FALSE) %>%
                 effect = X9,
                 se = X10, 
                 pvalue = X11)
-  
+s2 <- summ %>% dplyr::filter(chr == 22)  
 
 ```
 We need to create a fam file - ie, in standard format, with exactly 6 columns - for use with LDpred2.
@@ -56,5 +56,66 @@ if (!file.exists(fn_rds)){
   bed <- fn_rds
 }
 bs <- bigsnpr::snp_attach(bed)
+```
 
+```{r}
+G   <- bs$genotypes
+CHR <- bs$map$chromosome
+POS <- bs$map$physical.pos
+NCORES <- bigparallelr::nb_cores()
+```
+
+```{r}
+# read training set ids 
+training_ids_fn <- paste0("../dat/training-ids-fold", fold, ".txt")
+training_ids <- vroom::vroom(training_ids_fn, col_names = FALSE)
+ind.train <- which(bs$fam$family.ID %in% training_ids$X1)
+```
+
+```{r}
+s3 <- s2 %>%
+  dplyr::select(1,2,3, allele0, allele1, effect, pvalue) %>%
+  dplyr::rename(rsid = rs_id, pos = position, a0 = allele0, a1 = allele1, beta = effect, p = pvalue)
+map <- bs$map[,-(2:3)]
+names(map) <- c("chr", "pos", "a1", "a0")
+info_snp <- bigsnpr::snp_match(s3, map)
+```
+
+
+```{r}
+# beta and lpval need to have the same length as ncol(G), CHR and POS
+# -> one solution is to use missing values and use the 'exclude' parameter
+beta <- rep(NA, ncol(G))
+beta[info_snp$`_NUM_ID_`] <- info_snp$beta
+lpval <- rep(NA, ncol(G))
+lpval[info_snp$`_NUM_ID_`] <- -log10(info_snp$p)
+```
+
+```{r}
+# inputted genotypes must have no missing values
+# so, we create a new object, G2, with imputed genotypes, for use here
+# impute missing genotypes
+G2 <- bigsnpr::snp_fastImputeSimple(Gna = bs$genotypes, 
+                           ncores = NCORES
+                           )
+
+all_keep <- bigsnpr::snp_grid_clumping(G2, CHR, POS, ind.row = ind.train,
+                              lpS = lpval, exclude = which(is.na(lpval)),
+                              ncores = NCORES)
+```
+
+Since one or more of our p-values is interpreted as zero, we replace it with the smallest nonzero value, to enable us to use `snp_grid_PRS`.
+
+```{r}
+lpval[lpval == Inf] <- 16
+```
+
+```{r}
+multi_PRS <- bigsnpr::snp_grid_PRS(G = G2, 
+                                   all_keep = all_keep, 
+                                   betas = beta, 
+                                   lpS = lpval, 
+                                   ind.row = ind.train,
+                                   ncores = NCORES)
+dim(multi_PRS)  
 ```
