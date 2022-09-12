@@ -45,8 +45,10 @@ opt = parse_args(opt_parser)
 
 # set parameter
 p_len <- 21 # length of vector of p's
-comp_str1 <- "/net/mulan/disk2/yasheng/comparisonProject/"
-comp_str2 <- "/net/mulan/disk2/yasheng/comparisonProject/"
+#comp_str1 <- "/net/mulan/disk2/yasheng/comparisonProject/"
+#comp_str2 <- "/net/mulan/disk2/yasheng/comparisonProject/"
+comp_str1 <- "~/research/ukb-intervals-sims/dat/"
+comp_str2 <- comp_str1
 
 if (opt$dat == "binary"){
   ref_str <- paste0(comp_str2, "04_reference/", opt$reftype, 
@@ -54,10 +56,14 @@ if (opt$dat == "binary"){
   val_str <- paste0(comp_str1, "03_subsample/", opt$dat, "/pheno", opt$pheno, 
                     "/val/impute_inter/chr", opt$chr)
 } else {
-  ref_str <- paste0(comp_str2, "04_reference/", opt$reftype, 
-                    "/geno_inter/chr", opt$chr, "_c")
-  val_str <- paste0(comp_str1, "03_subsample/", opt$dat, "/pheno", opt$pheno, 
-                    "/val/", opt$reftype, "/impute_inter/chr", opt$chr)
+  #ref_str <- paste0(comp_str2, "04_reference/", opt$reftype, 
+  #                  "/geno_inter/chr", opt$chr, "_c")
+  # define path to chr-specific plink files for ref data
+  ref_str <- paste0(comp_str1, "reference/ukb/geno/chr", opt$chr)
+  # define path to chr-specific validation plink files
+  val_str <- paste0(comp_str1, "validation/geno/chr", opt$chr)
+  #val_str <- paste0(comp_str1, "03_subsample/", opt$dat, "/pheno", opt$pheno, 
+  #                  "/val/", opt$reftype, "/impute_inter/chr", opt$chr)
 }
 ref_sub_str <- paste0(ref_str, "_sub-", as.numeric(as.POSIXlt(Sys.time())))
 # val_str <- paste0(comp_str1, "03_subsample/", opt$dat, "/pheno", opt$pheno, 
@@ -72,8 +78,19 @@ if(!file.exists(paste0(val_str, ".rds")) | !file.exists(paste0(val_str, ".bk")))
   }
   val_bed <- snp_readBed(paste0(val_str, ".bed"))
 }
+if(!file.exists(paste0(ref_str, ".rds")) | !file.exists(paste0(ref_str, ".bk"))){
+  # system(paste0("rm ", val_str, ".bk"))
+  if(file.exists(paste0(ref_str, ".bk"))){
+    system(paste0("rm ", ref_str, ".bk"))
+  }
+  ref_bed <- snp_readBed(paste0(ref_str, ".bed"))
+}
+
 ref_bed <- snp_attach(paste0(ref_str, ".rds"))
 val_bed <- snp_attach(paste0(val_str, ".rds"))
+
+length(ref_bed$map$marker.ID)
+length(val_bed$map$marker.ID)
 
 if(all(ref_bed$map$marker.ID == val_bed$map$marker.ID) == F){
 
@@ -88,8 +105,8 @@ if(all(ref_bed$map$marker.ID == val_bed$map$marker.ID) == F){
 
 # process ref data
 # ref_bed <- snp_readBed(paste0(ref_str, ".bed"))
-ref_bed$map$genetic.dist <- snp_asGeneticPos(ref_bed$map$chromosome, ref_bed$map$physical.pos,
-                                             paste0(comp_str2, "/interpolated_OMNI/"))
+ref_bed$map$genetic.dist <- snp_asGeneticPos(infos.chr = ref_bed$map$chromosome, 
+                                             infos.pos = ref_bed$map$physical.pos)
 ref_G <- ref_bed$genotypes
 ref_CHR <- ref_bed$map$chromosome
 ref_POS <- ref_bed$map$physical.pos
@@ -109,7 +126,8 @@ info_chr <- info_snp$`_NUM_ID_`
 POS2 <- ref_map$g.dis[ref_map$rsid%in%info_snp$rsid]
 
 # est h2
-if (opt$reftype == "hm3"){
+#if (opt$reftype == "hm3"){
+if (opt$reftype == "ukb"){
   corr <- snp_cor(ref_G, ind.col = info_chr, 
                   ncores = opt$thread,
                   infos.pos = POS2,
@@ -146,8 +164,10 @@ if(h2_est < 0){
   
   
   if (opt$dat == "continuous"){
-    y <- fread2(paste0(comp_str1, "03_subsample/continuous/pheno", opt$pheno, 
-                       "/val/", opt$reftype, "/02_pheno_c.txt"))[, 1]
+    #y <- fread2(paste0(comp_str1, "03_subsample/continuous/pheno", opt$pheno, 
+    #                   "/val/", opt$reftype, "/02_pheno_c.txt"))[, 1]
+    y <- vroom::vroom(paste0(comp_str1, "hsq", hsq, "_pcausal", pcausal, "/validation/pheno", opt$pheno, "_hsq", hsq, "_pcausal", pcausal, ".txt"),
+                      col_names = FALSE)[, 1]
   } else {
     y <- fread2(paste0(comp_str1, "03_subsample/binary/pheno", opt$pheno, 
                        "/val/02_pheno_b.txt"))[, 1]
@@ -179,9 +199,10 @@ if(h2_est < 0){
   beta_grid_na <- beta_grid[, !idx_na]
   pred_grid_na <- pred_grid[, !idx_na]
   params_na <- params[!idx_na, ]
-  # save(beta_grid, pred_grid, file = paste0(opt$LDpred2Path, "res_", 
-  #                                          opt$ref, "_cross", opt$cross, 
-  #                                          "_chr", opt$chr, ".RData"))
+   save(beta_grid, pred_grid, file = paste0(opt$LDpred2Path, "res_", 
+                                            opt$ref, "_pheno", opt$pheno, 
+                                            "_cross", opt$cross, 
+                                            "_chr", opt$chr, ".RData"))
   
   if (all(idx_na)){
     
@@ -227,20 +248,20 @@ if(h2_est < 0){
       { beta_grid_na[, .$id] * .$coef }
     cat ("LDpred model is ok!\n")
     ## output
-    # beta_LDpred2 <- data.frame(info_snp$rsid,
-    #                            info_snp$a1,
-    #                            beta_inf,
-    #                            best_grid_nosp,
-    #                            best_grid_sp,
-    #                            beta_auto)
+    beta_LDpred2 <- data.frame(info_snp$rsid,
+                                info_snp$a1,
+                                beta_inf,
+                                best_grid_nosp,
+                                best_grid_sp,
+                                beta_auto)
     }
   }
 }
 
-# write.table(beta_LDpred2,
-#             file = paste0(opt$LDpred2Path, "esteff_", opt$reftype,
-#                           "_cross", opt$cross, "_chr", opt$chr, ".txt"),
-#             col.names = F, row.names = F, quote = F)
+ write.table(beta_LDpred2,
+             file = paste0(opt$LDpred2Path, "esteff_", opt$reftype, "_pheno", opt$pheno,
+                           "_cross", opt$cross, "_chr", opt$chr, ".txt"),
+             col.names = F, row.names = F, quote = F)
 
 system(paste0("rm ", val_sub_str2, ".bk"))
 system(paste0("rm ", val_sub_str, ".bk"))
