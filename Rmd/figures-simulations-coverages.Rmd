@@ -1,0 +1,91 @@
+---
+title: "Drafting figures for coverage with simulated traits"
+author: "Frederick J. Boehm"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+replicate_number <- rep(1:5, times = 6)
+coverage <- c(
+  # hsq 0.1, pcausal 0.1
+  0.952,         
+  0.943,         
+  0.962,         
+  0.95,          
+  0.958,
+  # hsq 0.2 pcausal 0.001
+  0.953,
+  0.963,         
+  0.958,         
+  0.961,         
+  0.97,
+  # hsq 0.2 pcausal 0.01
+  0.952,
+  0.943,
+  0.962,
+  0.95,
+  0.958,
+  # hsq 0.2 pcausal 0.1
+  0.957,
+  0.954,
+  0.944,
+  0.96,
+  0.961,
+  # hsq 0.2 pcausal 1
+  0.97,
+  0.959,
+  0.956,
+  0.963,
+  0.96, 
+  # hsq 0.5 pcausal 0.1
+  0.96,
+  0.96,
+  0.954,
+  0.967,
+  0.956         
+              )
+hsq_v <- c(0.1, 0.2, 0.2, 0.2, 0.2, 0.5)
+hsq <- rep(hsq_v, each = 5)
+pcausal_v <- c(0.1, 0.001, 0.01, 0.1, 1, 0.1)
+pcausal <- rep(pcausal_v, each = 5)
+dat <- tibble::tibble(replicate = replicate_number, hsq = hsq, pcausal = pcausal, coverage = coverage)
+
+```
+
+We examine the "summary_ukb_pheno_fold_res.r2" files, where the phenotype number and fold number are specified. 
+
+Each contains 9 lines. We want the maximum of the third column.
+
+```{r}
+corr <- list()
+k = 0
+for (setting in 1:6){
+  (hsq <- hsq_v[setting])
+  (pcausal <- pcausal_v[setting])
+  for (pheno in 1:5){
+      for (fold in 1:5){
+        k <- k + 1
+        fn <- here::here("dat", paste0("hsq", hsq, "_pcausal", pcausal), "DBSLMM", paste0("summary_ukb_pheno", pheno, "_fold", fold, "_res.r2"))
+        corr[[k]] <- readr::read_delim(file = fn, delim = " ", col_names = FALSE) %>%
+          dplyr::mutate(hsq = hsq, pcausal = pcausal, pheno = pheno, fold = fold)
+          
+      }
+    }
+  }
+corr_tib <- corr %>% 
+  dplyr::bind_rows() %>%
+  dplyr::group_by(hsq, pcausal, pheno, fold) %>%
+  dplyr::summarise(max_corr = max(X3)) %>%
+  dplyr::summarise(mean_max_corr = mean(max_corr)) %>%
+  dplyr::rename(replicate = pheno) %>%
+  dplyr::left_join(dat)
+library(ggplot2)
+corr_tib %>% 
+  dplyr::mutate(group_id = dplyr::cur_group_id()) %>%
+  ggplot() + geom_point(aes(x = group_id, y = coverage, colour = as.factor(group_id)))
+
+
+#dplyr::group_map(~ ggplot(.) + aes(x=mean_max_corr, y=coverage) + geom_point() + ggtitle(.y[[1]]))
+```
+
