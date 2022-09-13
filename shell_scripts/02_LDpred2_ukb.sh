@@ -11,7 +11,7 @@
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/02_LDpred2_ukb_thread5_%a.err
 
 
-hsq=0.1
+hsq=0.5
 pc=0.1
 
 let k=0

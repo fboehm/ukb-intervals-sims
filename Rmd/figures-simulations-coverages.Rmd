@@ -82,10 +82,17 @@ corr_tib <- corr %>%
   dplyr::left_join(dat)
 library(ggplot2)
 corr_tib %>% 
-  dplyr::mutate(group_id = dplyr::cur_group_id()) %>%
-  ggplot() + geom_point(aes(x = group_id, y = coverage, colour = as.factor(group_id)))
+  dplyr::mutate(scenario = dplyr::cur_group_id()) %>%
+  ggplot() + geom_jitter(aes(x = scenario, y = coverage, colour = as.factor(scenario)), width = 0.1, height = 0)
 
 
 #dplyr::group_map(~ ggplot(.) + aes(x=mean_max_corr, y=coverage) + geom_point() + ggtitle(.y[[1]]))
 ```
 
+
+```{r}
+corr_tib %>%
+  dplyr::mutate(scenario = dplyr::cur_group_id()) %>%
+  dplyr::group_by(scenario) %>%
+  dplyr::summarise(corr = round(mean(mean_max_corr), 3))
+```

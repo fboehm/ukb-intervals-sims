@@ -153,110 +153,109 @@ if(h2_est < 0){
   
   ## LDpred2-auto
   if (opt$model == "LDpred2-auto"){
-  auto <- snp_ldpred2_auto(corr_sp, df_beta, h2_init = h2_est)
-  beta_auto <- auto[[1]]$beta_est
-  beta_auto <- ifelse(is.na(beta_auto), 0, beta_auto)
-  cat ("LDpred-auto model is ok!\n")
-  }
+    auto <- snp_ldpred2_auto(corr_sp, df_beta, h2_init = h2_est)
+    saveRDS(object = auto, file = paste0(LDpred2Path, "auto.rds"))
+    beta_auto <- auto[[1]]$beta_est
+    beta_auto <- ifelse(is.na(beta_auto), 0, beta_auto)
+    cat ("LDpred-auto model is ok!\n")
+    }
   
   ## LDpred2
   if (opt$model == "LDpred2-m"){
-  
-  
-  if (opt$dat == "continuous"){
-    #y <- fread2(paste0(comp_str1, "03_subsample/continuous/pheno", opt$pheno, 
-    #                   "/val/", opt$reftype, "/02_pheno_c.txt"))[, 1]
-    y <- vroom::vroom(paste0(comp_str1, "hsq", hsq, "_pcausal", pcausal, "/validation/pheno", opt$pheno, "_hsq", hsq, "_pcausal", pcausal, ".txt"),
-                      col_names = FALSE)[, 1]
-  } else {
-    y <- fread2(paste0(comp_str1, "03_subsample/binary/pheno", opt$pheno, 
-                       "/val/02_pheno_b.txt"))[, 1]
-    covar <- fread2(paste0(comp_str1, "03_subsample/binary/pheno", opt$pheno, 
-                           "/val/03_cov_eff.txt"))[, 1]
-  }
-  
-  # p_seq <- signif(seq_log(1e-5, 1, length.out = 2), 2)
-  # h_seq <- round(h2_est * 1, 4)
-  
-  p_seq <- signif(seq_log(1e-5, 1, length.out = p_len), 2)
-  h_seq <- round(h2_est * c(0.7, 1, 1.4), 4)
-  params <- expand.grid(p = p_seq, h2 = h_seq, sparse = c(FALSE, TRUE))
-  beta_grid <- snp_ldpred2_grid(corr_sp, df_beta,
-                                params, ncores = opt$thread)
-  val_sub_str2 <- paste0(val_str, "_sub-", as.numeric(as.POSIXlt(Sys.time())))
-  if (any(is.na(y)) == T){
-    idx <- which(!is.na(y))
-    val_bed <- snp_attach(snp_subset(val_bed, 
-                                     ind.row = idx, 
-                                     backingfile = val_sub_str2))
-    y <- y[idx]
-  }
-  
-  val_G <- val_bed$genotypes
-  pred_grid <- big_prodMat(val_G, beta_grid, ind.col = info_chr)
-  idx_na <- apply(pred_grid, 2, function(a) all(is.na(a))) | 
-    apply(beta_grid, 2, function(a) all(is.na(a)))
-  beta_grid_na <- beta_grid[, !idx_na]
-  pred_grid_na <- pred_grid[, !idx_na]
-  params_na <- params[!idx_na, ]
-   save(beta_grid, pred_grid, file = paste0(opt$LDpred2Path, "res_", 
-                                            opt$ref, "_pheno", opt$pheno, 
-                                            "_cross", opt$cross, 
-                                            "_chr", opt$chr, ".RData"))
-  
-  if (all(idx_na)){
-    
-    beta_LDpred2 <- data.frame(info_snp$rsid,
-                               info_snp$a1,
-                               beta_inf,
-                               0,
-                               0,
-                               beta_auto)
-  } else {
-    
-    
     if (opt$dat == "continuous"){
-      params_na[c("coef", "score")] <-
-        big_univLinReg(big_copy(pred_grid_na), y)[c("estim", "score")]
-      params_na$idx_val <- apply(pred_grid_na, 2, function(a) cor(a, y)^2)
+      #y <- fread2(paste0(comp_str1, "03_subsample/continuous/pheno", opt$pheno, 
+      #                   "/val/", opt$reftype, "/02_pheno_c.txt"))[, 1]
+      y <- vroom::vroom(paste0(comp_str1, "hsq", hsq, "_pcausal", pcausal, "/validation/pheno", opt$pheno, "_hsq", hsq, "_pcausal", pcausal, ".txt"),
+                        col_names = FALSE)[, 1]
     } else {
-      params_na[c("coef", "score")] <-
-        big_univLinReg(big_copy(pred_grid_na), 
-                       y, 
-                       covar.train = as.matrix(covar))[c("estim", "score")]
-      params_na$idx_val  <- apply(pred_grid_na, 2, AUC, target = y)
+      y <- fread2(paste0(comp_str1, "03_subsample/binary/pheno", opt$pheno, 
+                         "/val/02_pheno_b.txt"))[, 1]
+      covar <- fread2(paste0(comp_str1, "03_subsample/binary/pheno", opt$pheno, 
+                             "/val/03_cov_eff.txt"))[, 1]
+    }
+  
+    # p_seq <- signif(seq_log(1e-5, 1, length.out = 2), 2)
+    # h_seq <- round(h2_est * 1, 4)
+    
+    p_seq <- signif(seq_log(1e-5, 1, length.out = p_len), 2)
+    h_seq <- round(h2_est * c(0.7, 1, 1.4), 4)
+    params <- expand.grid(p = p_seq, h2 = h_seq, sparse = c(FALSE, TRUE))
+    beta_grid <- snp_ldpred2_grid(corr_sp, df_beta,
+                                  params, ncores = opt$thread)
+    val_sub_str2 <- paste0(val_str, "_sub-", as.numeric(as.POSIXlt(Sys.time())))
+    if (any(is.na(y)) == T){
+      idx <- which(!is.na(y))
+      val_bed <- snp_attach(snp_subset(val_bed, 
+                                       ind.row = idx, 
+                                       backingfile = val_sub_str2))
+      y <- y[idx]
     }
     
-    ## parameters
-    params_na %>%
-      mutate(sparsity = colMeans(beta_grid_na == 0), id = c(1: nrow(params_na))) %>%
-      arrange(desc(score)) %>%
-      mutate_at(4:8, signif, digits = 3)
-    # no-sparsity effect
-    best_grid_nosp <- params_na %>%
-      mutate(id = c(1: nrow(params_na))) %>%
-      filter(!sparse) %>%
-      arrange(desc(score)) %>%
-      slice(1) %>%
-      { beta_grid_na[, .$id] * .$coef }
-    # sparsity effect
-    best_grid_sp <- params_na %>%
-      mutate(id = c(1: nrow(params_na))) %>%
-      filter(sparse) %>%
-      arrange(desc(score)) %>%
-      slice(1) %>%
-      { beta_grid_na[, .$id] * .$coef }
-    cat ("LDpred model is ok!\n")
-    ## output
-    beta_LDpred2 <- data.frame(info_snp$rsid,
-                                info_snp$a1,
-                                beta_inf,
-                                best_grid_nosp,
-                                best_grid_sp,
-                                beta_auto)
+    val_G <- val_bed$genotypes
+    pred_grid <- big_prodMat(val_G, beta_grid, ind.col = info_chr)
+    idx_na <- apply(pred_grid, 2, function(a) all(is.na(a))) | 
+      apply(beta_grid, 2, function(a) all(is.na(a)))
+    beta_grid_na <- beta_grid[, !idx_na]
+    pred_grid_na <- pred_grid[, !idx_na]
+    params_na <- params[!idx_na, ]
+    save(beta_grid, pred_grid, file = paste0(opt$LDpred2Path, "res_", 
+                                              opt$ref, "_pheno", opt$pheno, 
+                                              "_cross", opt$cross, 
+                                              "_chr", opt$chr, ".RData"))
+    
+    if (all(idx_na)){
+      
+      beta_LDpred2 <- data.frame(info_snp$rsid,
+                                 info_snp$a1,
+                                 beta_inf,
+                                 0,
+                                 0,
+                                 beta_auto)
+    } else {
+      
+      
+      if (opt$dat == "continuous"){
+        params_na[c("coef", "score")] <-
+          big_univLinReg(big_copy(pred_grid_na), y)[c("estim", "score")]
+        params_na$idx_val <- apply(pred_grid_na, 2, function(a) cor(a, y)^2)
+      } else {
+        params_na[c("coef", "score")] <-
+          big_univLinReg(big_copy(pred_grid_na), 
+                         y, 
+                         covar.train = as.matrix(covar))[c("estim", "score")]
+        params_na$idx_val  <- apply(pred_grid_na, 2, AUC, target = y)
+      }
+      
+      ## parameters
+      params_na %>%
+        mutate(sparsity = colMeans(beta_grid_na == 0), id = c(1: nrow(params_na))) %>%
+        arrange(desc(score)) %>%
+        mutate_at(4:8, signif, digits = 3)
+      # no-sparsity effect
+      best_grid_nosp <- params_na %>%
+        mutate(id = c(1: nrow(params_na))) %>%
+        filter(!sparse) %>%
+        arrange(desc(score)) %>%
+        slice(1) %>%
+        { beta_grid_na[, .$id] * .$coef }
+      # sparsity effect
+      best_grid_sp <- params_na %>%
+        mutate(id = c(1: nrow(params_na))) %>%
+        filter(sparse) %>%
+        arrange(desc(score)) %>%
+        slice(1) %>%
+        { beta_grid_na[, .$id] * .$coef }
+      cat ("LDpred model is ok!\n")
+      ## output
+      beta_LDpred2 <- data.frame(info_snp$rsid,
+                                  info_snp$a1,
+                                  beta_inf,
+                                  best_grid_nosp,
+                                  best_grid_sp,
+                                  beta_auto)
+      }
     }
   }
-}
 
  write.table(beta_LDpred2,
              file = paste0(opt$LDpred2Path, "esteff_", opt$reftype, "_pheno", opt$pheno,
