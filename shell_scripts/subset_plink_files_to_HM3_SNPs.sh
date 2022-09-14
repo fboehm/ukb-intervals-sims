@@ -4,7 +4,6 @@
 #SBATCH --time=1-00:00:00
 #SBATCH --job-name=plink_subset_SNPs
 #SBATCH --mem=64G
-
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/subset_snps.out
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/subset_snps.err
 
