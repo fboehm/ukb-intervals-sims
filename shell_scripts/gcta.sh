@@ -2,22 +2,43 @@
 
 
 #SBATCH --partition=mulan,main
-#SBATCH --time=18:00:00
+#SBATCH --time=12:00:00
 #SBATCH --job-name=gcta
 #SBATCH --mem=32G
 #SBATCH --cpus-per-task=1
-#SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gcta_%j_%a.out
-#SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gcta_%j_%a.err
+#SBATCH --array=1-36
+#SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gcta_%a.out
+#SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gcta_%a.err
 
-hsq=0.5
-pc=0.1
 
-mkdir -p ../dat/hsq${hsq}_pcausal${pc}/sim_traits
-    
-gcta64 --bfile ../dat/chr22 \
-        --simu-qt \
-        --simu-causal-loci ../dat/hsq${hsq}_pcausal${pc}/snp_effects_Chr22_hsq${hsq}_pcausal${pc}.txt \
-        --simu-hsq ${hsq} \
-        --simu-rep 5 \
-        --out ../dat/hsq${hsq}_pcausal${pc}/sim_traits/sims_Chr22_hsq${hsq}_pcausal${pc}
-            
+declare -a files
+for file in ~/research/ukb-intervals-sims/hapmap3/snp_effects/*.txt
+do
+    files=("${files[@]}" "$file")
+done
+
+#for filename in "${files[@]}"
+let k=0
+
+for filename in "${files[@]}"; do
+  let k=${k}+1
+  if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
+
+    # parse hsq from file name
+    # first, cut with period as field separator
+    #filename=~/research/ukb-intervals-sims/hapmap3/snp_effects/scenarioIII_laplace_hsq0.5.txt
+    out_suffix=$( basename $filename )
+    field2=$( echo "${filename}" | cut -d'.' -f2 )
+#    echo "$field2"
+    hsq=$( echo "scale=2 ; $field2 / 10" | bc )
+#    echo ${hsq}
+
+
+    gcta64 --bfile ../hapmap3/plink_files_for_sims/chr1 \
+            --simu-qt \
+            --simu-causal-loci ${filename} \
+            --simu-hsq ${hsq} \
+            --simu-rep 10 \
+            --out ../hapmap3/sim_traits/sims_${out_suffix}
+    fi
+  done
