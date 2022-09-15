@@ -1,55 +1,42 @@
-#hsq <- 0.5
-#pcausal <- 0.1
+# GOAL: choose 13,000 subjects for simulating traits with.
+# These 13,000 include 1000 for validation, 1000 for verification, and 
+# 11,000 for training and test together
+# we'll do five-fold crossvalidation with the 11,000 - 1000 test and 10,000 training each time
+
 
 library(magrittr)
-
-#ids <- vroom::vroom(file = snakemake@input[[1]], col_names = FALSE)
-## MAKE REFERENCE DATA SUBSET
-load("/net/mulan/disk2/yasheng/comparisonProject/02_pheno/01_sqc.RData")
-ref_num <- 250 # reference number: 250 males, 250 females 
-# male
-idx_male <- which(sqc_i$Inferred.Gender == "M")
-sqc_male <- sqc_i[idx_male, c("Inferred.Gender", "idx")]
-set.seed(20170529)
-idx_male_ref <- sample(sqc_male$idx, ref_num)
-# female
-idx_female <- which(sqc_i$Inferred.Gender == "F")
-sqc_female <- sqc_i[idx_female, c("Inferred.Gender", "idx")]
-set.seed(20170529)
-idx_female_ref <- sample(sqc_female$idx, ref_num)
-# index for reference 
-idx_ref <- sort(c(idx_male_ref, idx_female_ref))
-write.table(cbind(idx_ref, idx_ref), 
-             file = "../dat/reference/01_idx.txt", 
-             col.names = FALSE, row.names = FALSE, quote = FALSE)
-sqc_sub <- sqc_i[!sqc_i$idx %in% idx_ref,]
-##
-set.seed(2022-06-01)
-pre_val_ids <- sample(x = sqc_sub$idx, size = 36629, replace = FALSE) 
-# split pre_val_ids into two - one validation set and a "verification" set of, say, 1000.
-# verification set is used in the cv, as the X_{n+1}, while validation is used in the tuning of parameters for DBSLMM
-# we also need the "reference" set
-verif_ids <- sample(pre_val_ids, size = 1000, replace = FALSE)
-val_ids <- setdiff(pre_val_ids, verif_ids)
-# Write to files
-val_ids %>%
-  tibble::tibble(.name_repair = "universal") %>%
-  dplyr::rename(X1 = 1) %>%
+# sample 13,000 subjects from the 337,129
+## read fam file for entire 337,129
+fam_file <- "../hapmap3/hm3_ukb/chr1.fam"
+fam_tib <- vroom::vroom(fam_file, col_names = FALSE)
+set.seed(2022-09-14)
+# sample 13000 ids
+sim_ids <- sample(x = fam_tib$X1, size = 13000, replace = FALSE)
+# write 13000 ids for use with plink --keep
+ids_file <- "../hapmap3/subjects_for_sims.txt"
+tibble::tibble(X1 = sim_ids, X2 = sim_ids) %>%
   dplyr::arrange(X1) %>%
-  dplyr::mutate(X2 = X1) %>%
-  #vroom::vroom_write(file = snakemake@output[[1]], col_names = FALSE)
-  vroom::vroom_write(file = "../dat/validation-ids.txt", col_names = FALSE)
-verif_ids %>%
-  tibble::tibble(.name_repair = "universal") %>%
-  dplyr::rename(X1 = 1) %>%
+  vroom::vroom_write(file = ids_file, col_names = FALSE)
+# sample verification 1000 subjects
+verif_ids <- sample(x = sim_ids, size = 1000, replace = FALSE)
+# write verif_ids to file
+verif_ids_file <- "../hapmap3/subjects_for_sims_verification.txt"
+tibble::tibble(X1 = verif_ids, X2 = verif_ids) %>%
   dplyr::arrange(X1) %>%
-  dplyr::mutate(X2 = X1) %>%
-  #vroom::vroom_write(file = snakemake@output[[2]], col_names = FALSE)
-  vroom::vroom_write(file = "../dat/verification-ids.txt", col_names = FALSE)
+  vroom::vroom_write(file = verif_ids_file, col_names = FALSE)
+# take setdiff to get 12,000 remaining ids
+remaining_ids <- setdiff(sim_ids, verif_ids)
+# sample 1000 validation set
+valid_ids <- sample(x = remaining_ids, size = 1000, replace = FALSE)
+# write validation ids to file
+valid_ids_file <- "../hapmap3/subjects_for_sims_validation.txt"
+tibble::tibble(X1 = valid_ids, X2 = valid_ids) %>%
+  dplyr::arrange(X1) %>%
+  vroom::vroom_write(file = valid_ids_file, col_names = FALSE)
+# get test&training 11000 subjects
+test_and_training_ids <- setdiff(remaining_ids, valid_ids)
 
-test_and_training_ids <- setdiff(sqc_sub$idx, pre_val_ids)
-# set up for 5-fold cv with the remaining 300,000 subjects
-set.seed(2022-06-10)
+# set up for 5-fold cv with the remaining 11,000 subjects
 ids_shuffled <- sample(x = test_and_training_ids, size = length(test_and_training_ids))
 folds <- cut(seq(1,length(ids_shuffled)),breaks=5,labels=FALSE)
 # https://stats.stackexchange.com/questions/61090/how-to-split-a-data-set-to-do-10-fold-cross-validation
@@ -62,19 +49,20 @@ for (i in 1:5){
     dplyr::mutate(X2 = ids_shuffled) %>%
     dplyr::select(- folds) %>%
     #vroom::vroom_write(file = snakemake@output[[2 + i]], col_names = FALSE)
-    vroom::vroom_write(file = paste0("../dat/test-ids-fold", i, ".txt"), col_names = FALSE)
+    vroom::vroom_write(file = paste0("../hapmap3/test-ids-fold", i, ".txt"), col_names = FALSE)
   # write training ids for the fold
   ids_tib %>%
     dplyr::filter(folds != i) %>%
     dplyr::mutate(X2 = ids_shuffled) %>%
     dplyr::select(- folds) %>%
-    vroom::vroom_write(file = paste0("../dat/training-ids-fold", i, ".txt"), col_names = FALSE)
+    vroom::vroom_write(file = paste0("../hapmap3/training-ids-fold", i, ".txt"), col_names = FALSE)
 }
+# lastly, choose 500 of the validation subjects to be the reference panel
+ref_ids <- sample(x = valid_ids, size = 500, replace = FALSE)
+ref_ids_file <- "../hapmap3/subjects_for_sims_reference.txt"
+tibble::tibble(X1 = ref_ids, X2 = ref_ids) %>%
+  dplyr::arrange(X1) %>%
+  vroom::vroom_write(file = ref_ids_file, col_names = FALSE)
 
-## Verify subsetting
-intersect(test_and_training_ids, idx_ref)
-intersect(test_and_training_ids, val_ids)
-intersect(test_and_training_ids, verif_ids)
-intersect(verif_ids, val_ids)
-intersect(verif_ids, idx_ref)
-intersect(val_ids, idx_ref)
+
+
