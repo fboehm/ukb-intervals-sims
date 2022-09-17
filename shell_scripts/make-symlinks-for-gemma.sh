@@ -1,8 +1,15 @@
-hsq=0.1
-pcausal=0.1
-newdir=../dat/hsq${hsq}_pcausal${pcausal}/gemma
-for chr in `seq 1 22`; do
-        ln -s /net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr${chr}.bed ${newdir}/chr${chr}.bed 
-        ln -s /net/mulan/disk2/yasheng/predictionProject/plink_file/ukb/chr${chr}.bim ${newdir}/chr${chr}.bim 
-        ln -s ../sim_traits/sims_Chr22_hsq${hsq}_pcausal${pcausal}-NAs.fam ${newdir}/chr${chr}.fam 
-      done
+scenarios=( I II III IV)
+distributions=( laplace normal scaledt)
+hsqs=(0.1 0.2 0.5)
+
+for scenario in ${scenarios[@]}; do
+  for distribution in ${distributions[@]}; do
+    for hsq in ${hsqs[@]}; do
+      bed=~/research/ukb-intervals-sims/hapmap3/plink_files_for_sims/chr1.bed
+      bim=~/research/ukb-intervals-sims/hapmap3/plink_files_for_sims/chr1.bim
+      outdir=~/research/ukb-intervals-sims/dat-quant/gemma/scenario${scenario}/${distribution}/hsq${hsq}
+      ln -s ${bed} ${outdir}/chr1.bed 
+      ln -s ${bim} ${outdir}/chr1.bim 
+    done
+  done
+done

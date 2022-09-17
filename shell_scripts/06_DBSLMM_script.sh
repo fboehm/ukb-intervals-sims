@@ -68,14 +68,13 @@ TUNE=${software_path}DBSLMM/software/TUNE.R
 dbslmm=${software_path}/DBSLMM/scr/dbslmm
 
 # LDSC: heritability and number of SNP
-nsnp=`sed -n '24p' ${herit} | cut -d ',' -f 2 | cut -d ' ' -f 2`
-h2=`sed -n '26p' ${herit} | cut -d ":" -f 2 | cut -d '(' -f 1 | cut -d " " -f 2`
+nsnp=95123
+h2=${herit}
 
 # DBSLMM: tuning version
 if [[ "$type" == "t" ]]
 then
-	for chr in `seq 1 22`
-	do
+	for chr in 1; do
 
 		BLOCK=${block_prefix}${chr}
 		summchr=${summary_file_prefix}${chr}
@@ -117,7 +116,7 @@ then
 
 	hbest=`cat ${outpath}${summchr_prefix2}_hbest.${index}`
 	pbest=`cat ${outpath}${summchr_prefix2}_pbest.${index}`
-	for chr in `seq 1 22`
+	for chr in 1
 	do
 		mv ${outpath}${summchr_prefix2}_chr${chr}_h2f${hbest}_pth${pbest}.dbslmm.txt ${outpath}${summchr_prefix2}_chr${chr}_best.dbslmm.txt
 		rm ${outpath}${summchr_prefix2}_chr${chr}_h2f*_pth*
@@ -128,7 +127,7 @@ fi
 ## DBSLMM automatic version
 if [[ "$type" == "auto" ]]
 then
-for chr in `seq 1 22` 
+for chr in 1 
 # for chr in 22 
 do
 	BLOCK=${block_prefix}${chr}

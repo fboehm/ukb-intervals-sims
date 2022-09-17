@@ -6,61 +6,53 @@
 #SBATCH --mem=12G
 #SBATCH --cpus-per-task=5
 
-#SBATCH --array=1-25%5
+#SBATCH --array=1-360%30
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%j_%a.out
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%j_%a.err
 
-hsq=0.5
-pcausal=0.1
+scenarios=( I II III IV)
+distributions=( laplace normal scaledt)
+hsqs=(0.1 0.2 0.5)
 
 
+# 
 let k=0
+#let pc_ctr=0
+chr=1
+
+
+for scenario in ${scenarios[@]}; do
+  for distribution in ${distributions[@]}; do
+    for hsq in ${hsqs[@]}; do
+      for p in `seq 1 10`; do
+
+let k=${k}+1
+if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]
+then
+
 let thread=5
 
 dat=continuous
 type=t
 
-fbStr=~/research/ukb-intervals-sims/dat/
+fbStr=~/research/ukb-intervals-sims/
 
 compstr=/net/mulan/disk2/yasheng/comparisonProject/
 plink=/usr/cluster/bin/plink-1.9
 DBSLMM=06_DBSLMM_script.sh
-DBSLMMpath=/net/mulan/home/yasheng/predictionProject/code/
+DBSLMMpath=/net/mulan/home/yasheng/predictionProject/code/ # path to dbslmm C++ compiled
 blockf=${compstr}LDblock_EUR/chr
 #ref=${compstr}04_reference/ukb/geno/chr
-ref=${fbStr}reference/ukb/geno/chr
+ref=${fbStr}dat-quant/reference/chr
 
-for p in `seq 1 5`; do
-for cross in 1 2 3 4 5; do
 let k=${k}+1
 if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
 
-# phenoMiss=/net/mulan/disk2/yasheng/comparisonProject/code/02_method/DBSLMM_miss/pheno.txt
-# crossMiss=/net/mulan/disk2/yasheng/comparisonProject/code/02_method/DBSLMM_miss/cross.txt
-# chrMiss=/net/mulan/disk2/yasheng/comparisonProject/code/02_method/DBSLMM_miss/chr.txt
-# h2fMiss=/net/mulan/disk2/yasheng/comparisonProject/code/02_method/DBSLMM_miss/h2f.txt
-# pthMiss=/net/mulan/disk2/yasheng/comparisonProject/code/02_method/DBSLMM_miss/pth.txt
-# for iter in `seq 1 5`
-# do
-# let k=${k}+1
-# if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]
-# then
-# p=`head -n ${iter} ${phenoMiss} | tail -n 1`
-# cross=`head -n ${iter} ${crossMiss} | tail -n 1`
-# chr=`head -n ${iter} ${chrMiss} | tail -n 1`
-# h2f=`head -n ${iter} ${h2fMiss} | tail -n 1`
-# pth=`head -n ${iter} ${pthMiss} | tail -n 1`
-# echo pheno${p}_cross${cross}_chr${chr}_h2f${h2f}_pth${pth}
-
-# 
-#val=${compstr}03_subsample/${dat}/pheno${p}/val/ukb/impute_inter/chr
-val=~/research/ukb-intervals-sims/dat/validation/geno/chr
+val=~/research/ukb-intervals-sims/dat-quant/validation/chr
 
 if [[ "$dat" == "continuous" ]]
 then
-# phenoVal=${compstr}03_subsample/${dat}/pheno${p}/02_pheno_c.txt
-#phenoVal=${compstr}/03_subsample/${dat}/pheno${p}/val/ukb/02_pheno_c.txt
-phenoVal=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/validation/pheno${p}_hsq${hsq}_pcausal${pcausal}.txt
+phenoVal=~/research/ukb-intervals-sims/dat-quant/validation/scenario${scenario}_distribution${distribution}_hsq${hsq}_replicate${p}.txt
 index=r2
 else
 phenoVal=${compstr}03_subsample/${dat}/pheno${p}/val/ukb/02_pheno_b.txt
@@ -70,12 +62,11 @@ fi
 ## input
 if [[ "$dat" == "continuous" ]]
 then
-#herit=${compstr}05_internal_c/pheno${p}/herit/h2_ukb_cross${cross}.log
-herit=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/ldsc/h2_ukb_fold${cross}_pheno${p}_hsq${hsq}_pcausal${pcausal}.log
+herit=${hsq}
 #summ=${compstr}05_internal_c/pheno${p}/output/summary_ukb_cross${cross}_chr
 summ=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/gemma/output/summary_ukb_pheno${p}_fold${cross}_chr
 #outPath=/net/mulan/disk2/yasheng/comparisonProject/05_internal_c/pheno${p}/DBSLMM/
-outPath=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/DBSLMM/
+outPath=~/research/ukb-intervals-sims/dat-quant/DBSLMM/scenario${scenario}/${distribution}/hsq${hsq}
 else
 herit=${compstr}06_internal_b/pheno${p}/herit/h2_ukb_cross${cross}.log
 summ=${compstr}06_internal_b/pheno${p}/output/summary_ukb_cross${cross}_chr
@@ -85,7 +76,7 @@ fi
 
 mkdir -p ${outPath}
 ## DBSLMM
-esttime=~/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM_ukb_${dat}_pheno${p}_cross${cross}_hsq${hsq}_pcausal${pcausal}_thread${thread}.tm
+esttime=~/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM_ukb_scenario${scenario}_distribution${distribution}_hsq${hsq}_pheno${p}.tm
 if [[ "$dat" == "continuous" ]]
 then
 time /usr/bin/time -v -o ${esttime} sh ${DBSLMM} -D ${DBSLMMpath} -p ${plink} -B ${blockf} -s ${summ} -m DBSLMM\
@@ -107,6 +98,7 @@ fi
 fi
 done
 done
-
+done
+done
 
 
