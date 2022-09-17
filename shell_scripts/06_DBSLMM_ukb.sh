@@ -1,14 +1,14 @@
 #!/bin/bash
 
 #SBATCH --partition=mulan,main
-#SBATCH --time=3-00:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --job-name=DBSLMM
 #SBATCH --mem=12G
 #SBATCH --cpus-per-task=5
 
 #SBATCH --array=1-360%30
-#SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%j_%a.out
-#SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%j_%a.err
+#SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%a.out
+#SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%a.err
 
 scenarios=( I II III IV)
 distributions=( laplace normal scaledt)
@@ -45,14 +45,12 @@ blockf=${compstr}LDblock_EUR/chr
 #ref=${compstr}04_reference/ukb/geno/chr
 ref=${fbStr}dat-quant/reference/chr
 
-let k=${k}+1
-if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
-
+# genotypes (ie, plink files) for validation set
 val=~/research/ukb-intervals-sims/dat-quant/validation/chr
 
 if [[ "$dat" == "continuous" ]]
 then
-phenoVal=~/research/ukb-intervals-sims/dat-quant/validation/scenario${scenario}_distribution${distribution}_hsq${hsq}_replicate${p}.txt
+phenoVal=~/research/ukb-intervals-sims/dat-quant/validation/scenario${scenario}_${distribution}_hsq${hsq}_replicate${p}.txt
 index=r2
 else
 phenoVal=${compstr}03_subsample/${dat}/pheno${p}/val/ukb/02_pheno_b.txt
@@ -64,7 +62,7 @@ if [[ "$dat" == "continuous" ]]
 then
 herit=${hsq}
 #summ=${compstr}05_internal_c/pheno${p}/output/summary_ukb_cross${cross}_chr
-summ=~/research/ukb-intervals-sims/dat/hsq${hsq}_pcausal${pcausal}/gemma/output/summary_ukb_pheno${p}_fold${cross}_chr
+summ=~/research/ukb-intervals-sims/dat-quant/gemma/scenario${scenario}/${distribution}/hsq${hsq}/output/summary_ukb_pheno${p}_scenario${scenario}_${distribution}_hsq${hsq}_chr
 #outPath=/net/mulan/disk2/yasheng/comparisonProject/05_internal_c/pheno${p}/DBSLMM/
 outPath=~/research/ukb-intervals-sims/dat-quant/DBSLMM/scenario${scenario}/${distribution}/hsq${hsq}
 else
