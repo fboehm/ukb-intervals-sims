@@ -2,9 +2,9 @@
 
 
 #SBATCH --partition=mulan,main
-#SBATCH --time=12:00:00
+#SBATCH --time=2:00:00
 #SBATCH --job-name=gcta
-#SBATCH --mem=32G
+#SBATCH --mem=16G
 #SBATCH --cpus-per-task=1
 #SBATCH --array=1-36
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gcta_%a.out
