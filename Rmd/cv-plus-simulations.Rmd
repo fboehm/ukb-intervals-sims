@@ -8,9 +8,10 @@ output:
 bibliography: my.bib
 params:
   hsq: 0.1
-  pcausal: 0.1
+  scenario: "I"
+  distribution: "laplace"
   alpha: 0.1
-  n_traits: 5
+  n_replicates: 10
 ---
 
 ```{r}
@@ -23,13 +24,14 @@ library(magrittr)
 
 ```{r, echo = TRUE, message = FALSE}
 (hsq <- params$hsq)
-(pcausal <- params$pcausal)
-n_traits <- params$n_traits
-alpha <- params$alpha
-resfn <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/res.rds")
+(scenario <- params$scenario)
+(distribution <- params$distribution)
+(n_replicates <- params$n_replicates)
+(alpha <- params$alpha)
+resfn <- paste0("../dat-quant/DBSLMM/scenario", scenario, "/", distribution, "/hsq", hsq, "/res.rds")
 if (!file.exists(resfn)){
   out <- list()
-res <- lapply(1:n_traits, function(x, h2 = hsq, pc = pcausal) {
+res <- lapply(1:n_replicates, function(x, hsq = hsq, scenario = scenario, distribution = distribution) {
   knitr::knit_child(
     'cv-plus-simulations-child.Rmd', 
     envir = environment(), 
