@@ -6,7 +6,7 @@
 #SBATCH --mem=1G
 #SBATCH --cpus-per-task=5
 
-#SBATCH --array=1-360%200
+#SBATCH --array=1-1800%100
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%a.out
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/06_DBSLMM-tuning_sims_c_%a.err
 
@@ -25,7 +25,7 @@ for scenario in ${scenarios[@]}; do
   for distribution in ${distributions[@]}; do
     for hsq in ${hsqs[@]}; do
       for p in `seq 1 10`; do
-
+        for fold in `seq 1 5`; do
 let k=${k}+1
 if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]
 then
@@ -62,7 +62,7 @@ if [[ "$dat" == "continuous" ]]
 then
 herit=${hsq}
 #summ=${compstr}05_internal_c/pheno${p}/output/summary_ukb_cross${cross}_chr
-summ=~/research/ukb-intervals-sims/dat-quant/gemma/scenario${scenario}/${distribution}/hsq${hsq}/output/summary_ukb_pheno${p}_scenario${scenario}_${distribution}_hsq${hsq}_chr
+summ=~/research/ukb-intervals-sims/dat-quant/gemma/scenario${scenario}/${distribution}/hsq${hsq}/output/summary_ukb_pheno${p}_scenario${scenario}_${distribution}_hsq${hsq}_fold${fold}_chr
 #outPath=/net/mulan/disk2/yasheng/comparisonProject/05_internal_c/pheno${p}/DBSLMM/
 outPath=~/research/ukb-intervals-sims/dat-quant/DBSLMM/scenario${scenario}/${distribution}/hsq${hsq}/
 else
@@ -94,5 +94,5 @@ done
 done
 done
 done
-
+done
 

@@ -10,10 +10,10 @@ distribution_vec <- c("laplace", "normal", "scaledt")
 hsq_vec <- c(0.1, 0.2, 0.5)
 test_ids <- list()
 training_ids <- list()
-for (rep in 1:10){
-  test_ids[[rep]] <- vroom::vroom(file = paste0("../hapmap3/subjects_for_sims_test_replicate", rep, ".txt"), col_names = FALSE)
-  training_ids[[rep]] <- vroom::vroom(file = paste0("../hapmap3/subjects_for_sims_training_replicate", rep, ".txt"), col_names = FALSE)
-}  
+for (fold in 1:5){
+  test_ids[[fold]] <- vroom::vroom(file = paste0("../hapmap3/test-ids-fold", fold,".txt" ), col_names = FALSE)
+  training_ids[[fold]] <- vroom::vroom(file = paste0("../hapmap3/training-ids-fold", fold,".txt" ), col_names = FALSE)
+}
 
 false_to_na <- function(vec){
   vec[!vec] <- NA
@@ -38,45 +38,82 @@ for (scenario in scenario_vec){
       
       
       # make binary indicators of membership in training set
+      # make binary indicators of membership in training set
       tr_indic <- tibble::tibble(train1 = all_fam$X1 %in% training_ids[[1]]$X1,
                                  train2 = all_fam$X1 %in% training_ids[[2]]$X1,
                                  train3 = all_fam$X1 %in% training_ids[[3]]$X1,
                                  train4 = all_fam$X1 %in% training_ids[[4]]$X1,
-                                 train5 = all_fam$X1 %in% training_ids[[5]]$X1,
-                                 train6 = all_fam$X1 %in% training_ids[[6]]$X1,
-                                 train7 = all_fam$X1 %in% training_ids[[7]]$X1,
-                                 train8 = all_fam$X1 %in% training_ids[[8]]$X1,
-                                 train9 = all_fam$X1 %in% training_ids[[9]]$X1,
-                                 train10 = all_fam$X1 %in% training_ids[[10]]$X1
+                                 train5 = all_fam$X1 %in% training_ids[[5]]$X1
       ) %>%
-        dplyr::mutate(rep1_na = false_to_na(train1),
-                      rep2_na = false_to_na(train2),
-                      rep3_na = false_to_na(train3),
-                      rep4_na = false_to_na(train4),
-                      rep5_na = false_to_na(train5),
-                      rep6_na = false_to_na(train6),
-                      rep7_na = false_to_na(train7),
-                      rep8_na = false_to_na(train8),
-                      rep9_na = false_to_na(train9),
-                      rep10_na = false_to_na(train10)
+        dplyr::mutate(fold1_na = false_to_na(train1),
+                      fold2_na = false_to_na(train2),
+                      fold3_na = false_to_na(train3),
+                      fold4_na = false_to_na(train4),
+                      fold5_na = false_to_na(train5)
         )
       training_fam <- all_fam %>%
-        dplyr::mutate(rep1 = X3.y * tr_indic$rep1_na,
-                      rep2 = X4.y * tr_indic$rep2_na,
-                      rep3 = X5.y * tr_indic$rep3_na,
-                      rep4 = X6 * tr_indic$rep4_na,
-                      rep5 = X7 * tr_indic$rep5_na,
-                      rep6 = X8 * tr_indic$rep6_na,
-                      rep7 = X9 * tr_indic$rep7_na,
-                      rep8 = X10 * tr_indic$rep8_na,
-                      rep9 = X11 * tr_indic$rep9_na,
-                      rep10 = X12 * tr_indic$rep10_na
+        dplyr::rename(V1 = X3.y,
+                      V2 = X4.y,
+                      V3 = X5.y, 
+                      V4 = X6, V5 = X7, V6 = X8, V7 = X9, V8 = X10, V9 = X11, V10 = X12,
+                      X3 = X3.x, X4 = X4.x, X5 = X5.x) %>%
+        dplyr::mutate(tr1_fold1 = V1 * tr_indic$fold1_na,
+                      tr1_fold2 = V1 * tr_indic$fold2_na,
+                      tr1_fold3 = V1 * tr_indic$fold3_na,
+                      tr1_fold4 = V1 * tr_indic$fold4_na,
+                      tr1_fold5 = V1 * tr_indic$fold5_na,
+                      tr2_fold1 = V2 * tr_indic$fold1_na,
+                      tr2_fold2 = V2 * tr_indic$fold2_na,
+                      tr2_fold3 = V2 * tr_indic$fold3_na,
+                      tr2_fold4 = V2 * tr_indic$fold4_na,
+                      tr2_fold5 = V2 * tr_indic$fold5_na,
+                      tr3_fold1 = V3 * tr_indic$fold1_na,
+                      tr3_fold2 = V3 * tr_indic$fold2_na,
+                      tr3_fold3 = V3 * tr_indic$fold3_na,
+                      tr3_fold4 = V3 * tr_indic$fold4_na,
+                      tr3_fold5 = V3 * tr_indic$fold5_na,
+                      tr4_fold1 = V4 * tr_indic$fold1_na,
+                      tr4_fold2 = V4 * tr_indic$fold2_na,
+                      tr4_fold3 = V4 * tr_indic$fold3_na,
+                      tr4_fold4 = V4 * tr_indic$fold4_na,
+                      tr4_fold5 = V4 * tr_indic$fold5_na,
+                      tr5_fold1 = V5 * tr_indic$fold1_na,
+                      tr5_fold2 = V5 * tr_indic$fold2_na,
+                      tr5_fold3 = V5 * tr_indic$fold3_na,
+                      tr5_fold4 = V5 * tr_indic$fold4_na,
+                      tr5_fold5 = V5 * tr_indic$fold5_na,
+                      tr6_fold1 = V6 * tr_indic$fold1_na,
+                      tr6_fold2 = V6 * tr_indic$fold2_na,
+                      tr6_fold3 = V6 * tr_indic$fold3_na,
+                      tr6_fold4 = V6 * tr_indic$fold4_na,
+                      tr6_fold5 = V6 * tr_indic$fold5_na,
+                      tr7_fold1 = V7 * tr_indic$fold1_na,
+                      tr7_fold2 = V7 * tr_indic$fold2_na,
+                      tr7_fold3 = V7 * tr_indic$fold3_na,
+                      tr7_fold4 = V7 * tr_indic$fold4_na,
+                      tr7_fold5 = V7 * tr_indic$fold5_na,
+                      tr8_fold1 = V8 * tr_indic$fold1_na,
+                      tr8_fold2 = V8 * tr_indic$fold2_na,
+                      tr8_fold3 = V8 * tr_indic$fold3_na,
+                      tr8_fold4 = V8 * tr_indic$fold4_na,
+                      tr8_fold5 = V8 * tr_indic$fold5_na,
+                      tr9_fold1 = V9 * tr_indic$fold1_na,
+                      tr9_fold2 = V9 * tr_indic$fold2_na,
+                      tr9_fold3 = V9 * tr_indic$fold3_na,
+                      tr9_fold4 = V9 * tr_indic$fold4_na,
+                      tr9_fold5 = V9 * tr_indic$fold5_na,
+                      tr10_fold1 = V10 * tr_indic$fold1_na,
+                      tr10_fold2 = V10 * tr_indic$fold2_na,
+                      tr10_fold3 = V10 * tr_indic$fold3_na,
+                      tr10_fold4 = V10 * tr_indic$fold4_na,
+                      tr10_fold5 = V10 * tr_indic$fold5_na,
         ) %>%
-        dplyr::select(-(6:15))
+        dplyr::select(-V1, - V2, - V3, -V4, -V5, -V6, -V7, -V8, -V9, -V10) 
+      
       # write resulting fam file to appropriate subdir
       out_fn <- paste0("../dat-quant/gemma/scenario", scenario, "/", distribution, "/hsq", hsq, "/chr1.fam")
       training_fam %>%
-        vroom::vroom_write(file = out_fn)
+        vroom::vroom_write(file = out_fn, col_names = FALSE)
       
     }
   }

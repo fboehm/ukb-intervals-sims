@@ -6,7 +6,7 @@
 #SBATCH --job-name=gemma
 #SBATCH --mem=2G
 #SBATCH --cpus-per-task=1
-#SBATCH --array=1-360%250
+#SBATCH --array=1-1800%400
 #SBATCH --output=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gemma_%a.out
 #SBATCH --error=/net/mulan/home/fredboe/research/ukb-intervals-sims/cluster_outputs/gemma_%a.err
 
@@ -29,8 +29,8 @@ for scenario in ${scenarios[@]}; do
     for hsq in ${hsqs[@]}; do
 
 
-for p in `seq 1 10`
-do
+for p in `seq 1 10`; do
+for fold in `seq 1 5`; do
 
 let k=${k}+1
 if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]
@@ -38,16 +38,20 @@ then
 
 dir=~/research/ukb-intervals-sims/dat-quant/gemma/scenario${scenario}/${distribution}/hsq${hsq}
 bfile=${dir}/chr${chr}
-summ=summary_${type}_pheno${p}_scenario${scenario}_${distribution}_hsq${hsq}_chr${chr}
+summ=summary_${type}_pheno${p}_scenario${scenario}_${distribution}_hsq${hsq}_fold${fold}_chr${chr}
+let col=(${p}-1)*5+${fold}
+echo ${col}
+
 
 cd ${dir}
 file=output/${summ}.assoc.txt
-if [ ! -f "$file" ]; then # check if file doesn't exist
-${gemma} -bfile ${bfile} -notsnp -lm 1 -n ${p} -o ${summ}
-fi
+#if [ ! -f "$file" ]; then # check if file doesn't exist
+${gemma} -bfile ${bfile} -notsnp -lm 1 -n ${col} -o ${summ}
+#fi
 fi
 
 done 
+done
 done
 done
 done
