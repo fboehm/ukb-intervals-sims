@@ -68,8 +68,9 @@ TUNE=${software_path}DBSLMM/software/TUNE.R
 dbslmm=${software_path}/DBSLMM/scr/dbslmm
 
 # LDSC: heritability and number of SNP
-nsnp=95123
+nsnp=95077
 h2=${herit}
+echo ${h2}
 
 # DBSLMM: tuning version
 if [[ "$type" == "t" ]]
@@ -91,15 +92,15 @@ then
 		for h2f in 0.7 1 1.4
 		do
 			summchr_prefix=`echo ${summchr##*/}`
-			if [ -f "${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.dbslmm.badsnps" ];then
-				rm ${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.dbslmm.badsnps
-			fi
+#			if [ -f "${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.dbslmm.badsnps" ];then
+				#rm ${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.dbslmm.badsnps
+#			fi
 			${plink}  --silent --bfile ${val_geno} --score ${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.dbslmm.txt 1 2 4 sum\
 					  --out ${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}
-			rm ${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.log
-			if [ -f "${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.nopred" ];then
-				rm ${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.nopred
-			fi
+			#rm ${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.log
+			#if [ -f "${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.nopred" ];then
+			#	rm ${outpath}${summchr_prefix}_h2f${h2f}_pth${pth}.nopred
+			#fi
 		done
 		done
 	done
@@ -119,7 +120,7 @@ then
 	for chr in 1
 	do
 		mv ${outpath}${summchr_prefix2}_chr${chr}_h2f${hbest}_pth${pbest}.dbslmm.txt ${outpath}${summchr_prefix2}_chr${chr}_best.dbslmm.txt
-		rm ${outpath}${summchr_prefix2}_chr${chr}_h2f*_pth*
+		#rm ${outpath}${summchr_prefix2}_chr${chr}_h2f*_pth*
 	done
 
 fi
