@@ -1,0 +1,165 @@
+
+
+```{r, results = "hide", message = FALSE}
+out <- list()
+## read fam file with qn trait values for all subjects & all traits
+phen_file <- here::here("hapmap3", "sim_traits", paste0("sims_scenario", scenario, "_", distribution, "_hsq", hsq, ".txt.phen"))
+fam_all <- vroom::vroom(phen_file, col_names = FALSE) %>%
+  dplyr::select(-13)
+##
+fam_file <- here::here("dat-quant", "gemma", paste0("scenario", scenario), distribution, paste0("hsq", hsq), "chr1.fam")
+  # read fam file
+fam <- readr::read_table(file = fam_file, col_names = FALSE)
+for (cross_num in 1:5){
+  ## define col_num
+  col_num <- phe_num * 5 + (cross_num %% 5)  
+  
+  ## 
+  fam2 <- fam %>%
+    dplyr::select(1, 2, dplyr::all_of(col_num)) 
+  # read the profile files outputted by plink score allele
+  scores <- list()
+  for (chr_num in 1:1){
+    pfn <- paste0("pred_ukb_pheno", 
+                 phe_num, 
+                 "_fold", 
+                 cross_num, 
+                 ".txt.profile")
+    
+    profile_fn <- here::here("dat-quant", "CT", paste0("scenario", scenario), distribution, paste0("hsq", hsq), pfn)
+    scores[[chr_num]] <- readr::read_table(profile_fn, col_names = TRUE)
+    colnames(scores[[chr_num]]) <- paste0(colnames(scores[[chr_num]]), "_chr", chr_num)
+  }
+  scores2 <- lapply(X = scores, FUN = function(x){
+    x %>% dplyr::select(1,2,6) # choose the SCORESUM column
+  })
+  scores_df <- do.call("cbind", scores2) %>% tibble::as_tibble() %>%
+    dplyr::rename(fam_id = FID_chr1)
+  # read idx file
+#  idx_fn <- here::here("hapmap3", 
+#                       paste0("test-ids-fold", cross_num, ".txt")) 
+#  idx <- readr::read_table(idx_fn, col_names = FALSE) %>%
+#    dplyr::rename(fam_id = 1, subject_id = 2) %>%
+#    dplyr::select(fam_id)
+  fam3 <- fam2 %>%
+    dplyr::rename(fam_id = 1) %>%
+    dplyr::right_join(scores_df, by = "fam_id") 
+  out[[cross_num]] <- fam3 %>%
+    dplyr::rename(true_pheno = 3, predicted_value = SCORESUM_chr1) %>%
+    dplyr::mutate(cross_membership = cross_num)
+}  
+```
+
+```{r}
+fam_all_tr <- fam_all %>%
+  dplyr::select(1,2, dplyr::all_of(phe_num + 2)) %>%
+  dplyr::rename(fam_id = 1, subject_id = 2, true_pheno = 3)
+out_tib <- do.call("rbind", out) %>% 
+  tibble::as_tibble() %>% 
+  dplyr::rename(subject_id = X2) %>%
+  dplyr::select( - 3, -4) %>%
+  # bring in the true phenotypes from fam_all_tr object
+  dplyr::left_join(fam_all_tr, by = c("fam_id", "subject_id")) %>%
+  dplyr::mutate(residual = abs(true_pheno - predicted_value))
+```
+
+Now, we read in the plink score outputs and sum to get predicted values for the 
+subjects belonging to the verification set.
+
+
+```{r, results='hide', message = FALSE}
+verif_ids_fn <- here::here("hapmap3", "subjects_for_sims_verification.txt")
+verif_ids <- vroom::vroom(verif_ids_fn, col_names = FALSE)
+
+
+# above file contains phenotype values for the verification set
+verification_true_pheno_tib <- fam_all %>%
+  dplyr::right_join(verif_ids, by = c("X1", "X2")) %>%
+  dplyr::rename(fam_id = 1, subject_id = 2) %>%
+  dplyr::select(fam_id, subject_id, dplyr::all_of(2 + phe_num)) %>%
+  dplyr::rename(true_value = 3)
+
+```
+
+```{r}
+
+# get the five versions of predicted values for the verification set subjects
+out <- list()
+for (cross_num in 1:5){
+  foo <- list()
+  for (chr_num in 1:1){
+    # read allele scores for verification set
+    fn <- here::here("dat-quant", "verification", "CT-allele-scores", paste0("scenario", scenario), distribution, paste0("hsq", hsq), paste0("pred_replicate", phe_num, "_fold", cross_num, ".txt.profile"))
+    foo[[chr_num]] <- readr::read_table(fn) 
+  }
+  out[[cross_num]] <- foo 
+}
+# sum for each cross num
+pred_vals_verification_set <- list()
+for (cross_num in 1:5){
+  # rename cols in each list's elements (tibbles)
+  s2 <- list()
+  for (chr_num in 1:1){
+    s2[[chr_num]] <- out[[cross_num]][[chr_num]] %>%
+      dplyr::select(1,2,6)  # choose only the SCORESUM column & ID COLUMNS
+      colnames(s2[[chr_num]])[3] <- paste0(colnames(s2[[chr_num]])[3], "_chr", chr_num) 
+  }
+  scores_df <- do.call("cbind", s2) %>% 
+    tibble::as_tibble() %>%
+#    dplyr::mutate(sum_scores = rowSums(.)) %>%
+#    dplyr::select(sum_scores) %>%
+    dplyr::rename(predicted_value = SCORESUM_chr1)
+  colnames(scores_df)[3] <- paste0(colnames(scores_df)[3], "_cross", cross_num)
+  pred_vals_verification_set[[cross_num]] <- scores_df
+}
+pred_vals_verification_set_tib <- purrr::reduce(pred_vals_verification_set, dplyr::left_join, by = c("FID", "IID")) %>%
+  dplyr::rename(fam_id = FID, subject_id = IID) %>%
+  dplyr::left_join(verification_true_pheno_tib, by = c("fam_id", "subject_id")) %>%
+  dplyr::rename(true_pheno = true_value)
+```
+
+
+
+```{r, message = FALSE}
+get_fitted <- function(index, fitted_vec){
+  fitted_vec[index]
+}
+n_training <- nrow(out_tib)
+n_verification <- nrow(pred_vals_verification_set_tib)
+intervals <- list()
+for (i in 1:n_verification){
+  ### take one verification set observation
+   o3 <- out_tib %>% 
+     dplyr::mutate(fitted_cv =  purrr::map_dbl(.x = cross_membership, 
+                                               .f = get_fitted, 
+                                               fitted_vec = as.vector(unlist(pred_vals_verification_set_tib[i, 3:7])))
+                   ) %>% # calculate mu hat (X_{n + 1})
+     dplyr::mutate(fitted_minus_residual = fitted_cv - residual, 
+                   fitted_plus_residual = fitted_cv + residual)
+  ## determine quantiles - type 6?  of fitted_minus_residual and fitted_plus_residual
+  intervals[[i]]<- c(quantile(o3$fitted_minus_residual, 
+                              prob = floor(n_training * alpha / 2) / n_training, 
+                              type = 6), 
+  quantile(o3$fitted_plus_residual, 
+           prob = ceiling(n_training * (1 - alpha / 2)) / n_training, 
+           type = 6)
+  )
+}
+```
+
+
+
+```{r}
+mytib <- do.call("rbind", intervals) %>% 
+  tibble::as_tibble() %>%
+  dplyr::rename(left = 1, right = 2) %>%
+  dplyr::mutate(true_pheno = pred_vals_verification_set_tib$true_pheno) %>%
+  dplyr::mutate(in_interval = true_pheno <= right & true_pheno >= left) %>%
+  dplyr::mutate(interval_width = right - left)
+ 
+
+```
+
+
+
+

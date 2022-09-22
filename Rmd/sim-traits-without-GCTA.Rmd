@@ -1,0 +1,30 @@
+---
+title: "Simulating traits without using GCTA"
+author: "Frederick J. Boehm"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+
+```{r}
+bed_fn <- "../hapmap3/plink_files_for_sims/chr1.bed"
+bed_rds <- bigsnpr::snp_readBed(bed_fn)
+bigsnp <- bigsnpr::snp_attach("../hapmap3/plink_files_for_sims/chr1.rds")
+bigsnp$genotypes
+
+bs_cs<- bigstatsr::big_apply(bigsnp$genotypes, function(X, ind) {
+  # have an idea of progress
+  print(ind[1])
+  # access a subset of columns as a standard R matrix
+  X.sub <- X[ , ind, drop = FALSE]
+  
+  scale(X.sub, center = TRUE, scale = TRUE)
+  
+}, a.combine = 'cbind', block.size = 1000)
+bs2 <- bigstatsr::as_FBM(bs_cs)
+```
+
+```{r}
+# read snp effects file
+snp_effects_fn <- "../hapmap3/snp_effects/scenarioI_laplace_hsq0.1.txt"
+```

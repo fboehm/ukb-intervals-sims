@@ -7,10 +7,8 @@ output:
     number_sections: false
 bibliography: my.bib
 params:
-  hsq: 0.1
-  pcausal: 0.1
   alpha: 0.1
-  n_traits: 5
+  n_replicates: 10
 ---
 
 ```{r}
@@ -22,52 +20,80 @@ library(magrittr)
 
 
 ```{r, echo = TRUE, message = FALSE}
-(hsq <- params$hsq)
-(pcausal <- params$pcausal)
-n_traits <- params$n_traits
-alpha <- params$alpha
-resfn <- paste0("../dat/hsq", hsq, "_pcausal", pcausal, "/res.rds")
-if (!file.exists(resfn)){
-  out <- list()
-res <- lapply(1:n_traits, function(x, h2 = hsq, pc = pcausal) {
-  knitr::knit_child(
-    'cv-plus-simulations-child.Rmd', 
-    envir = environment(), 
-    quiet = TRUE
-  )
-  get("out")
-})
+(n_replicates <- params$n_replicates)
+(alpha <- params$alpha)
+hsq_vec <- c(0.1, 0.2, 0.5)
+scenario_vec <- c("I", "II", "III", "IV")
+distribution_vec <- c("laplace", "normal", "scaledt")
 
-saveRDS(res, file = resfn)
-} else {
-  res <- readRDS(resfn)
+k <- 1 # index for res_list
+res_list <- list()
+for (scenario in scenario_vec){
+  for (distribution in distribution_vec){
+    for (hsq in hsq_vec){
+      for (phe_num in 1:n_replicates){
+      (resfn <- paste0("../dat-quant/DBSLMM/scenario", 
+                       scenario, "/", 
+                       distribution, "/hsq", 
+                       hsq, "/replicate", phe_num, "_res.rds"))
+      cat(  
+      knitr::knit_child(
+        'cv-plus-simulations-child.Rmd', 
+        envir = environment(), 
+        quiet = TRUE
+      )
+      )
+      
+      saveRDS(mytib, file = resfn)
+      res_list[[k]] <- mytib
+      k <- k + 1
+      
+    }
+  }
+  }
 }
+saveRDS(object = res_list, file = "res_list.rds")
 ```
 
 
 ```{r}
-coverages <- lapply(X = res, 
-                    FUN = function(mytib){
-  mytib %>%
-    dplyr::summarise(coverage = mean(in_interval))
-       }
-)
-do.call("rbind", coverages) %>%
+res_list <- readRDS("res_list.rds")
+# set up a tibble with the correct ordering of combinations of scenario, distribution, hsq, and replicate number
+coverages <- numeric()
+for (i in 1:360){ # loop over all 360 traits
+  coverages[i] <- res_list[[i]] %>%
+      dplyr::summarise(coverage = mean(in_interval))
+}
+results <- expand.grid(1:10, hsq_vec, distribution_vec, scenario_vec, stringsAsFactors = FALSE) %>%
   tibble::as_tibble() %>%
-  dplyr::mutate(trait_num = 1:length(res))
-```
+  dplyr::rename(replicate_number = 1, hsq = 2, distribution = 3, scenario = 4) %>%
+  dplyr::mutate(coverage = unlist(coverages))
 
-## Boxplots of interval width
+library(ggplot2)  
+plots <- results %>%
+  dplyr::group_by(scenario) %>%
+  dplyr::mutate(hsq_distribution = paste0(distribution, hsq)) %>%
+  dplyr::do(plots = ggplot(data=.)  + ylim(c(0.9, 1)) + xlab("Setting") + geom_boxplot(aes(x = hsq_distribution, y = coverage)) + geom_point(aes(x = hsq_distribution, y = coverage)) + ggtitle(paste0("Scenario ", unique(.$scenario))))
+plots$plots[[1]]
+ggsave(filename = "../results/quant_scenarioI.jpg")
+```
 
 ```{r}
-for (i in 1:length(res)){
-  res[[i]] <- res[[i]] %>%
-    dplyr::mutate(trait_num = i)
-}
-dplyr::bind_rows(res) %>%
-  ggplot2::ggplot() + 
-  ggplot2::geom_violin(ggplot2::aes(x = trait_num, y = interval_width, group = trait_num))
+plots$plots[[2]]
+ggsave(filename = "../results/quant_scenarioII.jpg")
 ```
+
+```{r}
+plots$plots[[3]]
+ggsave(filename = "../results/quant_scenarioIII.jpg")
+```
+
+
+```{r}
+plots$plots[[4]]
+ggsave(filename = "../results/quant_scenarioIV.jpg")
+```
+
 
 
 
