@@ -12,7 +12,7 @@ fam_file <- here::here("dat-quant", "gemma", paste0("scenario", scenario), distr
 fam <- readr::read_table(file = fam_file, col_names = FALSE)
 for (cross_num in 1:5){
   ## define col_num
-  col_num <- phe_num * 5 + (cross_num %% 5)  
+  col_num <- phe_num * 5 + cross_num 
   
   ## 
   fam2 <- fam %>%
