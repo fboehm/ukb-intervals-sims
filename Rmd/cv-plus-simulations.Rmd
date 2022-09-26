@@ -74,6 +74,9 @@ plots <- results %>%
   dplyr::group_by(scenario) %>%
   dplyr::mutate(hsq_distribution = paste0(distribution, hsq)) %>%
   dplyr::do(plots = ggplot(data=.)  + ylim(c(0.9, 1)) + xlab("Setting") + geom_boxplot(aes(x = hsq_distribution, y = coverage)) + geom_point(aes(x = hsq_distribution, y = coverage)) + ggtitle(paste0("Scenario ", unique(.$scenario))))
+```
+
+```{r}
 plots$plots[[1]]
 ggsave(filename = "../results/quant_scenarioI.jpg")
 ```
