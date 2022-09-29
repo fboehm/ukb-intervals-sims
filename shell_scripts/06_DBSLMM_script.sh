@@ -68,9 +68,11 @@ TUNE=${software_path}DBSLMM/software/TUNE.R
 dbslmm=${software_path}/DBSLMM/scr/dbslmm
 
 # LDSC: heritability and number of SNP
-nsnp=95077
+ref_bim_file=~/research/ukb-intervals-sims/dat-quant-136k/reference/chr1.bim
+nsnp=`wc -l ${ref_bim_file} | awk '{print $1}'`
 h2=${herit}
 echo ${h2}
+echo ${nsnp}
 
 # DBSLMM: tuning version
 if [[ "$type" == "t" ]]
