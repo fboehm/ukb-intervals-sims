@@ -1,0 +1,108 @@
+---
+title: "Cross-validation-plus for Simulated traits"
+author: "Frederick J. Boehm"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::html_document2:
+    number_sections: false
+bibliography: my.bib
+params:
+  alpha: 0.1
+  n_replicates: 10
+---
+
+```{r}
+library(magrittr)
+```
+
+
+### How to use the results files from DBSLMM
+
+
+```{r, echo = TRUE, message = FALSE}
+(n_replicates <- params$n_replicates)
+(alpha <- params$alpha)
+hsq_vec <- c(0.1, 0.2, 0.5)
+scenario_vec <- c("I", "II", "III", "IV")
+distribution_vec <- c("laplace", "normal", "scaledt")
+
+k <- 1 # index for res_list
+res_list <- list()
+for (scenario in scenario_vec){
+  for (distribution in distribution_vec){
+    for (hsq in hsq_vec){
+      for (phe_num in 1:n_replicates){
+      (resfn <- paste0("../dat-quant-136k/DBSLMM/scenario", 
+                       scenario, "/", 
+                       distribution, "/hsq", 
+                       hsq, "/replicate", phe_num, "_res-136k.rds"))
+      cat(  
+      knitr::knit_child(
+        'cv-plus-simulations-child-136k.Rmd', 
+        envir = environment(), 
+        quiet = TRUE
+      )
+      )
+      
+      saveRDS(mytib, file = resfn)
+      res_list[[k]] <- mytib
+      k <- k + 1
+      
+    }
+  }
+  }
+}
+saveRDS(object = res_list, file = "res_list-136k.rds")
+```
+
+
+```{r}
+res_list <- readRDS("res_list-136k.rds")
+# set up a tibble with the correct ordering of combinations of scenario, distribution, hsq, and replicate number
+coverages <- numeric()
+for (i in 1:360){ # loop over all 360 traits
+  coverages[i] <- res_list[[i]] %>%
+      dplyr::summarise(coverage = mean(in_interval))
+}
+results <- expand.grid(1:10, hsq_vec, distribution_vec, scenario_vec, stringsAsFactors = FALSE) %>%
+  tibble::as_tibble() %>%
+  dplyr::rename(replicate_number = 1, hsq = 2, distribution = 3, scenario = 4) %>%
+  dplyr::mutate(coverage = unlist(coverages))
+
+library(ggplot2)  
+plots <- results %>%
+  dplyr::group_by(scenario) %>%
+  dplyr::mutate(hsq_distribution = paste0(distribution, hsq)) %>%
+  dplyr::do(plots = ggplot(data=.)  + ylim(c(0.9, 1)) + xlab("Setting") + geom_boxplot(aes(x = hsq_distribution, y = coverage)) + geom_point(aes(x = hsq_distribution, y = coverage)) + ggtitle(paste0("Scenario ", unique(.$scenario))))
+```
+
+```{r}
+plots$plots[[1]]
+ggsave(filename = "../results/quant_scenarioI-136k.jpg")
+```
+
+```{r}
+plots$plots[[2]]
+ggsave(filename = "../results/quant_scenarioII-136k.jpg")
+```
+
+```{r}
+plots$plots[[3]]
+ggsave(filename = "../results/quant_scenarioIII-136k.jpg")
+```
+
+
+```{r}
+plots$plots[[4]]
+ggsave(filename = "../results/quant_scenarioIV-136k.jpg")
+```
+
+
+
+
+# References
+
+
+
+
+

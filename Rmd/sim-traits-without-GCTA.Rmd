@@ -10,7 +10,7 @@ output: html_document
 bed_fn <- "../hapmap3/plink_files_for_sims/chr1.bed"
 bed_rds <- bigsnpr::snp_readBed(bed_fn)
 bigsnp <- bigsnpr::snp_attach("../hapmap3/plink_files_for_sims/chr1.rds")
-bigsnp$genotypes
+bigsnp$genotypes <- bigsnpr::snp_fastImputeSimple(Gna = bigsnp$genotypes)
 
 bs_cs<- bigstatsr::big_apply(bigsnp$genotypes, function(X, ind) {
   # have an idea of progress
@@ -27,4 +27,14 @@ bs2 <- bigstatsr::as_FBM(bs_cs)
 ```{r}
 # read snp effects file
 snp_effects_fn <- "../hapmap3/snp_effects/scenarioI_laplace_hsq0.1.txt"
+snp_effects <- vroom::vroom(snp_effects_fn, col_names = FALSE)
 ```
+
+```{r}
+prods <- bigstatsr::big_prodVec(X = bs2, y.col = as.numeric(snp_effects$X2))
+```
+
+
+
+
+
