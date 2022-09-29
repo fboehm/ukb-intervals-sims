@@ -68,7 +68,7 @@ TUNE=${software_path}DBSLMM/software/TUNE.R
 dbslmm=${software_path}/DBSLMM/scr/dbslmm
 
 # LDSC: heritability and number of SNP
-ref_bim_file=~/research/ukb-intervals-sims/dat-quant-136k/reference/chr1.bim
+ref_bim_file=~/research/ukb-intervals-sims/dat-quant/reference/chr1.bim
 nsnp=`wc -l ${ref_bim_file} | awk '{print $1}'`
 h2=${herit}
 echo ${h2}
