@@ -21,7 +21,17 @@ results <- settings_tib %>%
 })) %>%
     dplyr::mutate(coverage = purrr::map_dbl(.x = filename, .f = function(x){
         readRDS(x)
-    }))
+    })) %>%
+  dplyr::mutate(mean_R2 = purrr::pmap_dbl(.l = list(scenario, distribution, hsq, replicate), 
+                                          .f = function(scenario, distribution, hsq, replicate){
+                                            r2 <- numeric()
+                                            for (fold in 1:5){
+                                              fn <- paste0("../dat-quant-5fold-manual-sim/DBSLMM/scenario", scenario, "/", distribution, "/hsq", hsq, "/summary_ukb_pheno", replicate, "_scenario", scenario, "_", distribution, "_hsq", hsq, "_fold", fold, "_res.r2")
+                                              dat <- readr::read_table(file = fn, col_names = FALSE)
+                                              r2[fold] <- max(dat$X3)
+                                            }
+                                            return(mean(r2))
+                                          }))
 
 ```
 
@@ -54,3 +64,34 @@ plots$plots[[4]]
 ggsave(filename = "../results/revised-DBSLMM/manual-quant_scenarioIV.jpg")
 ```
 
+## Plot mean $R^2$ values
+
+```{r}
+plots <- results %>%
+  dplyr::group_by(scenario) %>%
+  dplyr::mutate(hsq_distribution = paste0(distribution, hsq)) %>%
+  dplyr::do(plots = ggplot(data=.)   +
+              geom_point(aes(x = mean_R2, colour = hsq_distribution, y = coverage)) +
+              ggtitle(paste0("Scenario ", unique(.$scenario))))
+```
+
+```{r}
+plots$plots[[1]] %>% plotly::ggplotly()
+ggsave(filename = "../results/revised-DBSLMM/manual-quant_scenarioI-meanR2.jpg")
+```
+
+```{r}
+plots$plots[[2]] %>% plotly::ggplotly()
+ggsave(filename = "../results/revised-DBSLMM/manual-quant_scenarioII-meanR2.jpg")
+```
+
+```{r}
+plots$plots[[3]] %>% plotly::ggplotly()
+ggsave(filename = "../results/revised-DBSLMM/manual-quant_scenarioIII-meanR2.jpg")
+```
+
+
+```{r}
+plots$plots[[4]] %>% plotly::ggplotly()
+ggsave(filename = "../results/revised-DBSLMM/manual-quant_scenarioIV-meanR2.jpg")
+```
