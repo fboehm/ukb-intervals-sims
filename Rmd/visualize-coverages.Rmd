@@ -1,0 +1,56 @@
+---
+title: "Visualizing coverages"
+author: "Frederick J. Boehm"
+date: '2022-10-05'
+output: html_document
+---
+
+```{r}
+library(magrittr)
+scenario_vec <- c("I", "II", "III", "IV")
+distribution_vec <- c("laplace", "normal", "scaledt")
+hsq_vec <- c(0.1, 0.2, 0.5)
+replicate_vec <- 1:10
+settings_tib <- expand.grid(replicate_vec, hsq_vec, distribution_vec, scenario_vec) %>%
+  tibble::as_tibble() %>%
+  dplyr::rename(replicate = 1, hsq = 2, distribution = 3, scenario = 4)
+results <- settings_tib %>%
+    dplyr::mutate(filename = purrr::pmap_chr(.l = list(scenario, distribution, hsq, replicate), 
+                                             .f = function(scenario, distribution, hsq, replicate){ 
+                                                 paste0("../results/sims-12500-5fold-scenario", scenario, "-", distribution, "-hsq", hsq, "-replicate", replicate, ".rds") 
+})) %>%
+    dplyr::mutate(coverage = purrr::map_dbl(.x = filename, .f = function(x){
+        readRDS(x)
+    }))
+
+```
+
+```{r}
+library(ggplot2)  
+plots <- results %>%
+  dplyr::group_by(scenario) %>%
+  dplyr::mutate(hsq_distribution = paste0(distribution, hsq)) %>%
+  dplyr::do(plots = ggplot(data=.)  + ylim(c(0.9, 1)) + xlab("Setting") + geom_boxplot(aes(x = hsq_distribution, y = coverage)) + geom_point(aes(x = hsq_distribution, y = coverage)) + ggtitle(paste0("Scenario ", unique(.$scenario))))
+```
+
+```{r}
+plots$plots[[1]]
+ggsave(filename = "../results/revised-DBSLMM/quant_scenarioI.jpg")
+```
+
+```{r}
+plots$plots[[2]]
+ggsave(filename = "../results/revised-DBSLMM/quant_scenarioII.jpg")
+```
+
+```{r}
+plots$plots[[3]]
+ggsave(filename = "../results/revised-DBSLMM/quant_scenarioIII.jpg")
+```
+
+
+```{r}
+plots$plots[[4]]
+ggsave(filename = "../results/revised-DBSLMM/quant_scenarioIV.jpg")
+```
+

@@ -146,10 +146,10 @@ for (i in 1:n_verification){
                    fitted_plus_residual = fitted_cv + residual)
   ## determine quantiles - type 6?  of fitted_minus_residual and fitted_plus_residual
   intervals[[i]]<- c(quantile(o3$fitted_minus_residual, 
-                              prob = floor(n_training * alpha / 2) / n_training, 
+                              prob = floor((n_training + 1) * (alpha / 2)) / n_training, 
                               type = 6), 
   quantile(o3$fitted_plus_residual, 
-           prob = ceiling(n_training * (1 - alpha / 2)) / n_training, 
+           prob = ceiling((n_training + 1) * (1 - alpha / 2)) / n_training, 
            type = 6)
   )
 }
