@@ -122,7 +122,7 @@ then
 	for chr in 1
 	do
 		mv ${outpath}${summchr_prefix2}_chr${chr}_h2f${hbest}_pth${pbest}.dbslmm.txt ${outpath}${summchr_prefix2}_chr${chr}_best.dbslmm.txt
-		#rm ${outpath}${summchr_prefix2}_chr${chr}_h2f*_pth*
+		rm ${outpath}${summchr_prefix2}_chr${chr}_h2f*_pth*
 	done
 
 fi
