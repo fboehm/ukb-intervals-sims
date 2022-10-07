@@ -26,31 +26,25 @@ chr=1
 for scenario in ${scenarios[@]}; do
   for distribution in ${distributions[@]}; do
     for hsq in ${hsqs[@]}; do
-
-
-for p in `seq 1 10`; do
-for fold in `seq 1 5`; do
-
-let k=${k}+1
-if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]
-then
-
-dir=~/research/ukb-intervals-sims/dat-quant-5fold-manual-sim/gemma/scenario${scenario}/${distribution}/hsq${hsq}
-bfile=${dir}/chr${chr}
-summ=summary_${type}_pheno${p}_scenario${scenario}_${distribution}_hsq${hsq}_fold${fold}_chr${chr}
-let col=(${p}-1)*5+${fold}
-echo ${col}
-
-
-cd ${dir}
-file=output/${summ}.assoc.txt
-#if [ ! -f "$file" ]; then # check if file doesn't exist
-${gemma} -bfile ${bfile} -notsnp -lm 1 -n ${col} -o ${summ}
-#fi
-fi
-
-done 
-done
-done
-done
-done
+      for p in `seq 1 10`; do
+        for fold in `seq 1 5`; do
+          let k=${k}+1
+          if [ ${k} -eq ${SLURM_ARRAY_TASK_ID} ]; then
+          
+            dir=~/research/ukb-intervals-sims/dat-quant-5fold-manual-sim/gemma/scenario${scenario}/${distribution}/hsq${hsq}
+            bfile=${dir}/chr${chr}
+            summ=summary_${type}_pheno${p}_scenario${scenario}_${distribution}_hsq${hsq}_fold${fold}_chr${chr}
+            let col=(${p}-1)*5+${fold}
+            echo ${col}
+            cd ${dir}
+            file=output/${summ}.assoc.txt
+            #if [ ! -f "$file" ]; then # check if file doesn't exist
+            ${gemma} -bfile ${bfile} -notsnp -lm 1 -n ${col} -o ${summ}
+            #fi
+          fi
+          done 
+        done
+      done
+    done
+  done
+  
