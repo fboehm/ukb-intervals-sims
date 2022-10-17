@@ -33,7 +33,9 @@ for (scenario in scenario_vec){
         dplyr::select(-6) %>%
         dplyr::left_join(trait_tib, by = c("X1", "X2"))
       # make binary indicators of membership in training set
-      tr_indic <- purrr::map(.x = training_ids, .f = function(x){false_to_na(all_fam$X1 %in% x$X1)}) %>%
+      tr_indic <- purrr::map(.x = training_ids, .f = function(x){
+        false_to_na(all_fam$X1 %in% x$X1)
+        }) %>%
         dplyr::bind_cols() %>%
         dplyr::rename_with(.fn = function(x){
           stringr::str_replace_all(x, pattern = "...", replacement = "train")
@@ -56,9 +58,10 @@ for (scenario in scenario_vec){
       training_means <- dplyr::summarise(training_fam, dplyr::across(.cols = 6:55, 
                                     .fns = ~ mean(.x, na.rm = TRUE),
                                     .names = "{.fn}.{.col}"))
-      training_sds <- dplyr::summarise(training_fam, dplyr::across(.cols = 6:55, 
-                                                                     .fns = ~ sd(.x, na.rm = TRUE),
-                                                                     .names = "{.fn}.{.col}"))
+      training_sds <- dplyr::summarise(training_fam, 
+                                       dplyr::across(.cols = 6:55, 
+                                                     .fns = ~ sd(.x, na.rm = TRUE),
+                                                     .names = "{.fn}.{.col}"))
 # 
       te_indic <- purrr::map(.x = test_ids, .f = function(x){false_to_na(all_fam$X1 %in% x$X1)}) %>%
         dplyr::bind_cols() %>%

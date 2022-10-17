@@ -71,24 +71,47 @@ for (fold in 1:n_folds){
 } # end loop over folds
 # make object phen2 to contain only id columns and a single replicate
 phen2 <- test_fam %>%
-  dplyr::select(dplyr::all_of((pheno * 5 + 1): pheno * 5 + 5)) %>%
+  dplyr::select(dplyr::all_of((pheno * 5 + 1): (pheno * 5 + 5))) %>%
   as.matrix()
 phen <- numeric()
 for (row in 1:nrow(phen2)){
-  if (phen2[row, ] == c(NA, NA, NA, NA, NA)){
+  if (isTRUE(all.equal(phen2[row, ] %>% as.numeric(), as.numeric(c(NA, NA, NA, NA, NA))))){
     phen[row] <- NA
   } else {
     foo <- phen2[row, ]
     phen[row] <- foo[!is.na(foo)]
   }
 }
+# read phen file to get the true phenotype values for the verification set
+phen_fn <- paste0("../hapmap3/sim_traits_manual/sims_scenario", scenario, "_", distribution, "_hsq", hsq, ".txt")
+ptib <- readr::read_table(phen_fn, col_names = FALSE) %>%
+  dplyr::select(1, 2, (pheno + 2)) %>%
+  dplyr::right_join(verif_ids, by = c("X1", "X2")) 
+
+#
 phen_true_pheno <- test_fam %>%
-  dplyr::mutate(true_pheno = phen)
+  dplyr::select(1,2) %>%
+  dplyr::mutate(true_pheno = phen) %>%
+  dplyr::left_join(ptib, by = c("X1", "X2"))
+# get a single vector with true pheno values for all but verification set
+true <- numeric()
+for (row in 1:nrow(phen_true_pheno)){
+  if (isTRUE(all.equal(phen_true_pheno[row, 3:4] %>% as.numeric(), 
+                       as.numeric(c(NA, NA))))){
+    true[row] <- NA
+  } else {
+    foo <- phen_true_pheno[row, 3:4]
+    true[row] <- foo[!is.na(foo)]
+  }
+} # end for loop over rows
+true_pheno <- phen_true_pheno %>%
+  dplyr::select(- c(3,4)) %>%
+  dplyr::mutate(true_pheno = true)
 pgs_tib <- pgs_list %>%
   # combine rows from pgs_list entries
   dplyr::bind_rows() %>%
   dplyr::arrange(X1) %>%
-  dplyr::left_join(phen_true_pheno, by = c("X1", "X2")) %>%
+  dplyr::left_join(true_pheno, by = c("X1", "X2")) %>%
   # calculate residuals
   dplyr::mutate(residual = abs(true_pheno - pgs))
 # muhat
@@ -114,7 +137,7 @@ for (i in 1:n_verif){
                      probs = ceiling((n_training + 1) * (1 - alpha / 2)) / n_training)
 }
 
-results <- phen_true_pheno %>%
+results <- true_pheno %>%
   dplyr::right_join(verif_ids, by = c("X1", "X2")) %>%
   dplyr::mutate(left_bound = lhs, right_bound = rhs) %>%
   dplyr::mutate(in_interval = true_pheno <= right_bound & true_pheno >= left_bound) %>%

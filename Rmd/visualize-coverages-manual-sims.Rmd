@@ -95,3 +95,28 @@ ggsave(filename = "../results/revised-DBSLMM/manual-quant_scenarioIII-meanR2.jpg
 plots$plots[[4]] %>% plotly::ggplotly()
 ggsave(filename = "../results/revised-DBSLMM/manual-quant_scenarioIV-meanR2.jpg")
 ```
+
+
+# Histograms of interval widths
+
+```{r}
+results2 <- results %>%
+      dplyr::mutate(filename2 = purrr::pmap_chr(.l = list(scenario, distribution, hsq, replicate), 
+                                             .f = function(scenario, distribution, hsq, replicate){ 
+                                                 paste0("../results/sims-manual-12500-5fold-interval-lengths-scenario", scenario, "-", distribution, "-hsq", hsq, "-replicate", replicate, ".rds") 
+}))  %>%
+    dplyr::mutate(interval_widths = purrr::map(.x = filename2, .f = function(x){
+        foo <- readRDS(x)
+        return(foo$interval_length)
+    })) 
+```
+
+```{r}
+for (i in 1:nrow(results2)){
+  print(paste0("HISTOGRAM ", i))
+  hist(results2$interval_widths[[i]])
+}
+```
+
+
+
