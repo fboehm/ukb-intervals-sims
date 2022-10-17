@@ -97,9 +97,28 @@ ggsave(filename = "../results/revised-DBSLMM/manual-quant_scenarioIV-meanR2.jpg"
 ```
 
 
-# Histograms of interval widths
+## Coverage vs mean heritability: one plot for all scenarios
 
 ```{r}
+res2 <- results %>%
+  dplyr::group_by(scenario, distribution, hsq) %>%
+  dplyr::mutate(group_id = paste0("scenario", scenario, "_", distribution,  "_hsq", hsq)) 
+res2 %>%
+  ggplot() + geom_point(aes(x = hsq, y = coverage, colour = group_id), show.legend = FALSE)
+cor(res2$hsq, res2$coverage)
+```
+
+```{r}
+res2 %>%
+  ggplot() + geom_point(aes(x = mean_R2, y = coverage, colour = group_id), show.legend = FALSE)
+cor(res2$mean_R2, res2$coverage)
+```
+
+
+
+# Histograms of interval widths
+
+```{r, eval = FALSE}
 results2 <- results %>%
       dplyr::mutate(filename2 = purrr::pmap_chr(.l = list(scenario, distribution, hsq, replicate), 
                                              .f = function(scenario, distribution, hsq, replicate){ 
@@ -111,7 +130,7 @@ results2 <- results %>%
     })) 
 ```
 
-```{r}
+```{r, eval = FALSE}
 for (i in 1:nrow(results2)){
   print(paste0("HISTOGRAM ", i))
   hist(results2$interval_widths[[i]])
