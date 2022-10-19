@@ -7,7 +7,7 @@ args = commandArgs(trailingOnly=TRUE)
 library(magrittr)
 
 n_folds <- 5
-alpha <- 0.1
+alpha <- 0.2
 b_file <- "../hapmap3/plink_files_for_sims/chr1.rds"
 gg <- bigsnpr::snp_attach(b_file)
 gg_imputed <- bigsnpr::snp_fastImputeSimple(Gna = gg$genotypes) 
@@ -148,6 +148,6 @@ coverage <- results %>%
   dplyr::summarise(coverage = mean(in_interval)) %>%
   unlist()
         
-saveRDS(object = coverage, file = paste0("../results/sims-manual-12500-5fold-scenario", scenario, "-", distribution, "-hsq", hsq, "-replicate", pheno, ".rds"))
-saveRDS(object = interval_lengths, file = paste0("../results/sims-manual-12500-5fold-interval-lengths-scenario", scenario, "-", distribution, "-hsq", hsq, "-replicate", pheno, ".rds"))
+saveRDS(object = coverage, file = paste0("../results/sims-manual-12500-5fold-scenario", scenario, "-", distribution, "-hsq", hsq, "-replicate", pheno, "-alpha", alpha,  ".rds"))
+saveRDS(object = interval_lengths, file = paste0("../results/sims-manual-12500-5fold-interval-lengths-scenario", scenario, "-", distribution, "-hsq", hsq, "-replicate", pheno, "-alpha", alpha, ".rds"))
 

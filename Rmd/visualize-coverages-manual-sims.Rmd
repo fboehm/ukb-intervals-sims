@@ -6,6 +6,7 @@ output: html_document
 ---
 
 ```{r}
+alpha <- 0.2
 library(magrittr)
 scenario_vec <- c("I", "II", "III", "IV")
 distribution_vec <- c("laplace", "normal", "scaledt")
@@ -17,7 +18,7 @@ settings_tib <- expand.grid(replicate_vec, hsq_vec, distribution_vec, scenario_v
 results <- settings_tib %>%
     dplyr::mutate(filename = purrr::pmap_chr(.l = list(scenario, distribution, hsq, replicate), 
                                              .f = function(scenario, distribution, hsq, replicate){ 
-                                                 paste0("../results/sims-manual-12500-5fold-scenario", scenario, "-", distribution, "-hsq", hsq, "-replicate", replicate, ".rds") 
+                                                 paste0("../results/sims-manual-12500-5fold-scenario", scenario, "-", distribution, "-hsq", hsq, "-replicate", replicate, "-alpha", alpha, ".rds") 
 })) %>%
     dplyr::mutate(coverage = purrr::map_dbl(.x = filename, .f = function(x){
         readRDS(x)
@@ -40,7 +41,7 @@ library(ggplot2)
 plots <- results %>%
   dplyr::group_by(scenario) %>%
   dplyr::mutate(hsq_distribution = paste0(distribution, hsq)) %>%
-  dplyr::do(plots = ggplot(data=.)  + ylim(c(0.9, 1)) + xlab("Setting") + geom_boxplot(aes(x = hsq_distribution, y = coverage)) + geom_point(aes(x = hsq_distribution, y = coverage)) + ggtitle(paste0("Scenario ", unique(.$scenario))))
+  dplyr::do(plots = ggplot(data=.)  + ylim(c(0.8, 1)) + xlab("Setting") + geom_boxplot(aes(x = hsq_distribution, y = coverage)) + geom_point(aes(x = hsq_distribution, y = coverage)) + ggtitle(paste0("Scenario ", unique(.$scenario))))
 ```
 
 ```{r}
