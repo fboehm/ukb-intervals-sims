@@ -21,6 +21,7 @@ library(magrittr)
 
 ```{r, echo = TRUE, message = FALSE}
 (n_replicates <- params$n_replicates)
+
 (alpha <- params$alpha)
 hsq_vec <- c(0.1, 0.2, 0.5)
 scenario_vec <- c("I", "II", "III", "IV")

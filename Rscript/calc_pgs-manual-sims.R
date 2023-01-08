@@ -1,5 +1,5 @@
 # Goal: use DBSLMM-estimated SNP effects and genotypes to calculate PGS
-args = commandArgs(trailingOnly=TRUE)
+args = commandArgs(trailingOnly = TRUE)
 (scenario <- args[1])
 (distribution <- args[2])
 (hsq <- as.numeric(args[3]))
@@ -23,7 +23,7 @@ pgs_list <- list()
 muhat <- list() # to store the muhat (Xn+1) values from Eqn 3.1
 for (fold in 1:n_folds){
   # DBSLMM outputted file
-  d_file <- paste0("../dat-quant-5fold-manual-sim/DBSLMM/scenario", scenario, "/", distribution, "/hsq", hsq, "/summary_ukb_pheno", pheno, "_scenario", scenario, "_", distribution, "_hsq", hsq, "_fold", fold, "_chr1_best.dbslmm.txt")
+  d_file <- paste0("../dat-quant-5fold-manual-sim/DBSLMM/scenario", scenario, "/", distribution, "/hsq", hsq, "/summary_ukb_pheno", pheno, "_scenario", scenario, "_", distribution, "_hsq", hsq, "_fold", fold, "_chr1_best.dbslmm.txt") # nolint
   dbslmm_output <- readr::read_table(d_file, col_names = FALSE)
   # read plink genotypes bed file
   # read training set membership file
@@ -34,18 +34,14 @@ for (fold in 1:n_folds){
   test_membership <- readr::read_table(test_membership_file, col_names = FALSE)
   test_indic <- gg$fam$family.ID %in% test_membership$X1
   # get column means for snp genotypes matrix of training subjects
-  #  tictoc::tic()
   col_means_training <- colMeans(x = gg_imputed[tr_indic, ], na.rm = TRUE)
   col_sds_training <- apply(FUN = sd, X = gg_imputed[tr_indic, ], MARGIN = 2)
-  
+   # nolint
   GG_centered <- sweep(x = gg_imputed[test_indic, ], 
               MARGIN = 2, 
               STATS = as.array(col_means_training))
-  GG <- sweep(x = GG_centered, MARGIN = 2, FUN = "/", STATS = as.array(col_sds_training))
-  #tictoc::toc()
+  GG <- sweep(x = GG_centered, MARGIN = 2, FUN = "/", STATS = as.array(col_sds_training)) # nolint
   # assign training mean genotype value to any missing values in GG
-  #tictoc::tic()
-  #tictoc::toc()
   # get indicator that GG SNP is in dbslmm output
   snp_indic <- gg$map$marker.ID %in% dbslmm_output$X1
   
@@ -56,7 +52,6 @@ for (fold in 1:n_folds){
   # extract genotypes for verification set
   verif_indic <- gg$fam$family.ID %in% verif_ids$X1
   # center test genotypes according to mean genotypes in training set
-  #tictoc::tic()
   GG_verif_centered <- sweep(x = gg_imputed[verif_indic, ], 
               MARGIN = 2, 
               STATS = as.array(col_means_training))
@@ -74,7 +69,7 @@ phen2 <- test_fam %>%
   dplyr::select(dplyr::all_of((pheno * 5 + 1): (pheno * 5 + 5))) %>%
   as.matrix()
 phen <- numeric()
-for (row in 1:nrow(phen2)){
+for (row in seq_len(nrow(phen2))){
   if (isTRUE(all.equal(phen2[row, ] %>% as.numeric(), as.numeric(c(NA, NA, NA, NA, NA))))){
     phen[row] <- NA
   } else {
@@ -95,7 +90,7 @@ phen_true_pheno <- test_fam %>%
   dplyr::left_join(ptib, by = c("X1", "X2"))
 # get a single vector with true pheno values for all but verification set
 true <- numeric()
-for (row in 1:nrow(phen_true_pheno)){
+for (row in seq_len(nrow(phen_true_pheno))){
   if (isTRUE(all.equal(phen_true_pheno[row, 3:4] %>% as.numeric(), 
                        as.numeric(c(NA, NA))))){
     true[row] <- NA
@@ -134,13 +129,13 @@ for (i in 1:n_verif){
   lhs[i] <- quantile(tib2$muhat_minus_residual,
                      probs = floor((n_training + 1) * (alpha / 2)) / n_training)
   rhs[i] <- quantile(tib2$muhat_plus_residual,
-                     probs = ceiling((n_training + 1) * (1 - alpha / 2)) / n_training)
+                     probs = ceiling((n_training + 1) * (1 - alpha / 2)) / n_training) # nolint
 }
 
 results <- true_pheno %>%
   dplyr::right_join(verif_ids, by = c("X1", "X2")) %>%
   dplyr::mutate(left_bound = lhs, right_bound = rhs) %>%
-  dplyr::mutate(in_interval = true_pheno <= right_bound & true_pheno >= left_bound) %>%
+  dplyr::mutate(in_interval = true_pheno <= right_bound & true_pheno >= left_bound) %>% # nolint
   dplyr::mutate(interval_length = right_bound - left_bound)
 interval_lengths <- results %>%
   dplyr::select(interval_length)
