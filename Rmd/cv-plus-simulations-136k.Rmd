@@ -98,7 +98,11 @@ plots$plots[[4]]
 ggsave(filename = "../results/quant_scenarioIV-136k.jpg")
 ```
 
+## Interval widths by trait
 
+```{r}
+
+```
 
 
 # References
