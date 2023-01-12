@@ -14,14 +14,14 @@
 scenarios=( I II III IV)
 distributions=( laplace normal scaledt)
 hsqs=(0.1 0.2 0.5)
+gemma=/net/fantasia/home/borang/software/gemma-0.98.3-linux-static
 
 
 # 
 let k=0
 #let pc_ctr=0
 type=ukb
-gemma=/net/mulan/home/yasheng/comparisonProject/program/gemma-0.98.1-linux-static
-chr=1
+let chr=1
 
 
 for scenario in ${scenarios[@]}; do
